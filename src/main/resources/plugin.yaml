@@ -9,9 +9,9 @@ spec:
     name: 困困鱼
     website: https://github.com/chengzhongxue
   logo: logo.png
+  homepage: https://github.com/chengzhongxue/plugin-douban
   settingName: plugin-douban-settings
   configMapName: plugin-douban-configmap
-  homepage: https://github.com/chengzhongxue/plugin-douban
   displayName: "豆瓣插件"
   description: "为主题提供从豆瓣爬取到的数据，提供页面路由"
   license:

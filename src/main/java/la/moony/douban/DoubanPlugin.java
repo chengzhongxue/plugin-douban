@@ -8,12 +8,9 @@ import run.halo.app.extension.SchemeManager;
 import run.halo.app.plugin.BasePlugin;
 
 /**
- * <p>Plugin main class to manage the lifecycle of the plugin.</p>
- * <p>This class must be public and have a public constructor.</p>
- * <p>Only one main class extending {@link BasePlugin} is allowed per plugin.</p>
- *
- * @author guqing
- * @since 1.0.0
+ * @author moony
+ * @url https://moony.la
+ * @date 2024/2/1
  */
 @Component
 public class DoubanPlugin extends BasePlugin {

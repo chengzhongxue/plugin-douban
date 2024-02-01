@@ -13,6 +13,7 @@ rules:
   - apiGroups: [ "douban.moony.la" ]
     resources: [ "doubanmovies"]
     verbs: [ "get", "list" ]
+
 ---
 
 apiVersion: v1alpha1
