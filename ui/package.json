@@ -1,5 +1,5 @@
 {
-  "name": "@halo-dev/plugin-starter",
+  "name": "@halo-dev/plugin-douban",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -14,7 +14,14 @@
     "@halo-dev/components": "^1.10.0",
     "@halo-dev/console-shared": "^2.11.0",
     "canvas-confetti": "^1.9.2",
-    "vue": "^3.3.12"
+    "vue": "^3.3.12",
+    "axios": "^1.6.1",
+    "@tanstack/vue-query": "^4.26.1",
+    "@vueuse/router": "^10.6.0",
+    "dayjs": "^1.11.9",
+    "javascript-time-ago": "^2.5.9",
+    "@types/lodash.clonedeep": "^4.5.7",
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@halo-dev/ui-plugin-bundler-kit": "^1.0.0",

@@ -1,5 +1,5 @@
 import { definePlugin } from "@halo-dev/console-shared";
-import HomeView from "./views/HomeView.vue";
+import Douban from "./views/Douban.vue";
 import { IconPlug } from "@halo-dev/components";
 import { markRaw } from "vue";
 
@@ -9,15 +9,16 @@ export default definePlugin({
     {
       parentName: "Root",
       route: {
-        path: "/example",
-        name: "Example",
-        component: HomeView,
+        path: "/douban",
+        name: "Douban",
+        component: Douban,
         meta: {
-          title: "示例页面",
+          title: "豆瓣",
           searchable: true,
+          permissions: ["plugin:douban:view"],
           menu: {
-            name: "示例页面",
-            group: "示例分组",
+            name: "豆瓣",
+            group: "content",
             icon: markRaw(IconPlug),
             priority: 0,
           },

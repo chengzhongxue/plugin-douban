@@ -1,0 +1,20 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-douban-settings
+spec:
+  forms:
+    - group: base
+      label: 基本设置
+      formSchema:
+        - $formkit: text
+          label: 页面标题
+          name: title
+          validation: required
+          value: '豆瓣记录'
+        - $formkit: text
+          label: Douban的ID
+          name: doubanId
+          validation: required
+          value: xxxx
+          help: 我的豆瓣 https://www.douban.com/people/xxxx
