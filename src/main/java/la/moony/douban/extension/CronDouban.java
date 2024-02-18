@@ -30,6 +30,7 @@ public class CronDouban extends AbstractExtension {
     public static class Spec {
         private String cron;
         private String timezone;
+        private boolean suspend;
 
     }
 

@@ -31,20 +31,19 @@ const initialFormState: DoubanMovie = {
     remark :"",
     createTime: "",
     score: "",
-    status: ""
+    status: "done"
   },
   spec: {
     name: "",
     poster: "",
     link: "",
-    doubanId: null,
-    doubanScore: "",
+    id: null,
+    score: "",
     year: "",
     type: "",
     pubdate: "",
     cardSubtitle: "",
-    tmdbId: null,
-    tmdbType: "halo",
+    dataType: "halo",
     genres: []
   },
   kind: "DoubanMovie",
@@ -172,12 +171,12 @@ const handleSaveFriend = async () => {
         <div class="mt-5 divide-y divide-gray-100 md:col-span-3 md:mt-0">
           <td v-if="isUpdateMode">
             <p><img :src="formState.spec.poster" width="100"></p>
-            <p>{{formState.spec.name}} <span class="db--titletag">{{formState.spec.tmdbType == 'db' ? '豆瓣' : '手动添加'}}</span>
+            <p>{{formState.spec.name}} <span class="db--titletag">{{formState.spec.dataType == 'db' ? '豆瓣' : formState.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</span>
             </p>
             <p>{{formState.spec.cardSubtitle}}</p>
           </td>
           <FormKit
-            v-if="formState.spec.tmdbType!='db'"
+            v-if="formState.spec.dataType=='halo'"
             type="attachment"
             v-model="formState.spec.poster"
             name="poster"
@@ -185,7 +184,7 @@ const handleSaveFriend = async () => {
             label="封面"
           ></FormKit>
           <FormKit
-            v-if="formState.spec.tmdbType!='db'"
+            v-if="formState.spec.dataType=='halo'"
             type="text"
             v-model="formState.spec.name"
             name="name"
@@ -193,17 +192,54 @@ const handleSaveFriend = async () => {
             label="标题"
           ></FormKit>
           <FormKit
-            v-if="formState.spec.tmdbType!='db'"
+            v-if="formState.spec.dataType=='halo'"
+            type="text"
+            v-model="formState.spec.link"
+            name="link"
+            validation="required"
+            label="链接"
+          ></FormKit>
+          <FormKit
+            v-if="formState.spec.dataType=='halo'"
             type="number"
-            v-model="formState.spec.doubanScore"
-            name="doubanScore"
+            v-model="formState.spec.score"
+            name="score"
             validation="required"
             label="评分"
             max="10"
             min="0"
           ></FormKit>
           <FormKit
-            v-if="formState.spec.tmdbType!='db'"
+            v-if="formState.spec.dataType=='halo'"
+            :options="[
+                    {
+                      label: '电影',
+                      value: 'movie',
+                    },
+                    {
+                      label: '图书',
+                      value: 'book',
+                    },
+                    {
+                      label: '音乐',
+                      value: 'music',
+                    },
+                    {
+                      label: '游戏',
+                      value: 'game',
+                    },
+                    {
+                      label: '舞台剧',
+                      value: 'drama',
+                    },
+                  ]"
+            label="类型"
+            v-model="formState.spec.type"
+            name="type"
+            type="select"
+          ></FormKit>
+          <FormKit
+            v-if="formState.spec.dataType=='halo'"
             type="textarea"
             v-model="formState.spec.cardSubtitle"
             name="cardSubtitle"
@@ -242,7 +278,7 @@ const handleSaveFriend = async () => {
             v-model="formState.faves.score"
             name="score"
             label="我的评分"
-            max="10"
+            max="5"
             min="0"
           ></FormKit>
         </div>

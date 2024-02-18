@@ -33,3 +33,5 @@ rules:
   - apiGroups: [ "douban.moony.la" ]
     resources: [ "doubanmovies"]
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
+  - nonResourceURLs: [ "/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/*"]
+    verbs: [ "create" , "delete" ]

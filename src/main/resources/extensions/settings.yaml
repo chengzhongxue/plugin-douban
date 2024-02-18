@@ -13,8 +13,6 @@ spec:
           validation: required
           value: '豆瓣记录'
         - $formkit: text
-          label: Douban的ID
+          label: 豆瓣的ID
           name: doubanId
-          validation: required
-          value: xxxx
-          help: 我的豆瓣 https://www.douban.com/people/xxxx
+          help: 我的豆瓣 https://www.douban.com/people/xxxx  xxxx 就是你的ID

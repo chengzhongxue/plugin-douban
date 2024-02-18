@@ -1,35 +1,28 @@
-# plugin-starter
+# plugin-douban
 
-Halo 2.0 插件开发快速开始模板。
+* 豆瓣管理插件, 支持在 Console 进行管理以及为主题端提供 `/douban` 页面路由。
+* 提供从豆瓣爬取到的数据
+
+## 使用方式
+* 在应用市场下载并启用。
+* 启用插件之后会在 Console 的左侧添加一个`豆瓣`的菜单项，点击即可进入`豆瓣`管理页面。
+
+## 📃文档
+https://moony.la/docs/plugin-douban
 
 ## 开发环境
 
-插件开发的详细文档请查阅：<https://docs.halo.run/developer-guide/plugin/hello-world>
-
-所需环境：
-
-1. Java 17
-2. Node 18
-3. pnpm 8
-4. Docker (可选)
-
-克隆项目：
-
 ```bash
-git clone git@github.com:halo-sigs/plugin-starter.git
+git clone git@github.com:chengzhongxue/plugin-douban.git
 
 # 或者当你 fork 之后
 
-git clone git@github.com:{your_github_id}/plugin-starter.git
+git clone git@github.com:{your_github_id}/plugin-douban.git
 ```
 
 ```bash
-cd path/to/plugin-starter
+cd path/to/plugin-douban
 ```
-
-### 运行方式 1（推荐）
-
-> 此方式需要本地安装 Docker
 
 ```bash
 # macOS / Linux
@@ -47,14 +40,6 @@ cd path/to/plugin-starter
 ./gradlew.bat haloServer
 ```
 
-执行此命令后，会自动创建一个 Halo 的 Docker 容器并加载当前的插件，更多文档可查阅：<https://github.com/halo-sigs/halo-gradle-plugin>
-
-### 运行方式 2
-
-> 此方式需要使用源码运行 Halo
-
-编译插件：
-
 ```bash
 # macOS / Linux
 ./gradlew build
@@ -69,8 +54,11 @@ cd path/to/plugin-starter
 halo:
   plugin:
     runtime-mode: development
+    classes-directories:
+      - "build/classes"
+      - "build/resources"
+    lib-directories:
+      - "libs"
     fixedPluginPath:
-      - "/path/to/plugin-starter"
+      - "/path/to/plugin-douban"
 ```
-
-最后重启 Halo 项目即可。

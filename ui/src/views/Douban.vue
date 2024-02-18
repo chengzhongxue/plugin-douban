@@ -215,6 +215,9 @@ const onEditingModalClose = async () => {
   <VPageHeader title="豆瓣">
     <template #actions>
       <VSpace v-permission="['plugin:douban:manage']">
+        <VButton :route="{ name: 'DoubanCron' }" size="sm">
+          任务
+        </VButton>
         <VButton
           type="secondary"
           @click="editingModal = true"
@@ -408,8 +411,8 @@ const onEditingModalClose = async () => {
               <td class="px-4 py-4 poster">
                 <img :src="doubanMovie.spec.poster"  referrerpolicy="no-referrer">
               </td>
-              <td class="px-4 py-4 table-td">豆瓣</td>
-              <td class="px-4 py-4 table-td">{{doubanMovie.spec.doubanScore}}</td>
+              <td class="px-4 py-4 table-td">{{doubanMovie.spec.dataType == 'db' ? '豆瓣' : doubanMovie.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</td>
+              <td class="px-4 py-4 table-td">{{doubanMovie.spec.score}}</td>
               <td class="px-4 py-4">{{doubanMovie.spec.cardSubtitle}}</td>
               <td class="px-4 py-4 table-td">{{formatDatetime(doubanMovie.faves.createTime)}}</td>
               <td class="px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status)}}</td>

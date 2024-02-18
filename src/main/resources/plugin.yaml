@@ -12,8 +12,8 @@ spec:
   homepage: https://github.com/chengzhongxue/plugin-douban
   settingName: plugin-douban-settings
   configMapName: plugin-douban-configmap
-  displayName: "豆瓣插件"
-  description: "为主题提供从豆瓣爬取到的数据，提供页面路由"
+  displayName: "豆瓣"
+  description: "提供从豆瓣爬取到的数据，提供页面路由"
   license:
     - name: "GPL-3.0"
       url: "https://github.com/halo-dev/plugin-douban/blob/main/LICENSE"

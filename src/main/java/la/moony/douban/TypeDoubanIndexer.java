@@ -17,36 +17,35 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class GenresDoubanIndexer implements Reconciler<Reconciler.Request> {
-
-    private static final String FINALIZER_NAME = "genres-douban-protection";
+public class TypeDoubanIndexer implements Reconciler<Reconciler.Request> {
+    private static final String FINALIZER_NAME = "type-douban-protection";
 
     private final ExtensionClient client;
 
-    private final GenresIndexer genreIndexer = new GenresIndexer();
+    private final TypeIndexer typeIndexer = new TypeIndexer();
 
 
     @NonNull
-    public Set<String> listPublicByGenreName(String genreName) {
-        return genreIndexer.getByIndex(genreName)
+    public Set<String> listPublicByTypeName(String typeName) {
+        return typeIndexer.getByIndex(typeName)
             .stream()
             .collect(Collectors.toSet());
     }
-    
+
     @NonNull
-    public Set<String> listAllGenres() {
-        return genreIndexer.keySet();
+    public Set<String> listAllType() {
+        return typeIndexer.keySet();
     }
     @Override
     public Result reconcile(Request request) {
         client.fetch(DoubanMovie.class, request.name()).ifPresent(doubanMovie -> {
             if (doubanMovie.getMetadata().getDeletionTimestamp() != null) {
-                genreIndexer.delete(doubanMovie);
+                typeIndexer.delete(doubanMovie);
                 removeFinalizer(request.name());
                 return;
             }
             addFinalizer(doubanMovie);
-            genreIndexer.update(doubanMovie);
+            typeIndexer.update(doubanMovie);
         });
         return Result.doNotRetry();
     }
@@ -86,31 +85,32 @@ public class GenresDoubanIndexer implements Reconciler<Reconciler.Request> {
             .build();
     }
 
-    static class GenresIndexer {
-        final IndexFunc<DoubanMovie> indexFunc = doubanMovie -> {
-            Set<String> genres = doubanMovie.getSpec().getGenres();
-            return genres != null ? Set.copyOf(genres) : Set.of();
+    static class TypeIndexer {
+        final TypeDoubanIndexer.TypeIndexer.IndexFunc<DoubanMovie> indexFunc = doubanMovie -> {
+            Set<String> types = new HashSet<>();
+            types.add(doubanMovie.getSpec().getType());
+            return types != null ? Set.copyOf(types) : Set.of();
         };
-        final SetMultimap<String, String> genresDoubanCache = HashMultimap.create();
+        final SetMultimap<String, String> typesDoubanCache = HashMultimap.create();
         final Set<String> publicDoubanMovies = new HashSet<>();
 
         public synchronized void add(DoubanMovie doubanMovie) {
             Set<String> indexKeys = indexFunc.apply(doubanMovie);
             for (String indexKey : indexKeys) {
-                genresDoubanCache.put(indexKey, getObjectKey(doubanMovie));
+                typesDoubanCache.put(indexKey, getObjectKey(doubanMovie));
                 publicDoubanMovies.add(getObjectKey(doubanMovie));
             }
         }
 
         public synchronized Set<String> getByIndex(String indexKey) {
-            Set<String> doubanNames = genresDoubanCache.get(indexKey);
+            Set<String> doubanNames = typesDoubanCache.get(indexKey);
             return Set.copyOf(doubanNames);
         }
 
         public synchronized void delete(DoubanMovie doubanMovie) {
             Set<String> indexKeys = indexFunc.apply(doubanMovie);
             for (String indexKey : indexKeys) {
-                genresDoubanCache.remove(indexKey, getObjectKey(doubanMovie));
+                typesDoubanCache.remove(indexKey, getObjectKey(doubanMovie));
                 publicDoubanMovies.remove(getObjectKey(doubanMovie));
             }
         }
@@ -119,14 +119,14 @@ public class GenresDoubanIndexer implements Reconciler<Reconciler.Request> {
             String objectKey = getObjectKey(doubanMovie);
             // find old index
             Set<String> oldIndexKeys = new HashSet<>();
-            for (String indexKey : genresDoubanCache.keySet()) {
-                if (genresDoubanCache.get(indexKey).contains(objectKey)) {
+            for (String indexKey : typesDoubanCache.keySet()) {
+                if (typesDoubanCache.get(indexKey).contains(objectKey)) {
                     oldIndexKeys.add(indexKey);
                 }
             }
             // remove old index
             for (String indexKey : oldIndexKeys) {
-                genresDoubanCache.remove(indexKey, objectKey);
+                typesDoubanCache.remove(indexKey, objectKey);
                 publicDoubanMovies.remove(objectKey);
             }
             // add new index
@@ -134,7 +134,7 @@ public class GenresDoubanIndexer implements Reconciler<Reconciler.Request> {
         }
 
         public synchronized Set<String> keySet() {
-            return Set.copyOf(genresDoubanCache.keySet());
+            return Set.copyOf(typesDoubanCache.keySet());
         }
 
         @FunctionalInterface

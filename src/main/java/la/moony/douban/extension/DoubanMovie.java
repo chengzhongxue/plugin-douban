@@ -28,14 +28,13 @@ public class DoubanMovie extends AbstractExtension {
         private String name;
         private String poster;
         private String link;
-        private String doubanId;
-        private String doubanScore;
+        private String id;
+        private String score;
         private String year;
         private String type;
         private String pubdate;
         private String cardSubtitle;
-        private Integer tmdbId;
-        private String tmdbType;
+        private String dataType;
 
         private Set<String> genres;
 

@@ -65,7 +65,11 @@ class HALO_DOUBAN {
             document.querySelector(".lds-ripple").classList.remove("u-hide");
 
             self.classList.add("is-active");
-            this.genre = self.innerText;
+            if(self.innerText=='全部'){
+                this.genre = null;
+            }else{
+                this.genre = self.innerText;
+            }
             this.paged = 1;
             this.finished = false;
             this.subjects = [];
@@ -75,8 +79,13 @@ class HALO_DOUBAN {
     }
 
     _renderGenre() {
+        var index = 0;
         document.querySelector(".db--genres").innerHTML = this.genre_list
                 .map((item) => {
+                    index = index+1;
+                    if(index==1){
+                        return `<span class="db--genreItem is-active">全部</span><span class="db--genreItem">${item}</span>`;
+                    }
                     return `<span class="db--genreItem">${item}</span>`;
                 })
                 .join("");
@@ -146,12 +155,12 @@ class HALO_DOUBAN {
             html += `<div class="db--listBydate"><div class="db--titleDate JiEun"><div class="db--titleDate__day">${date[1]}</div><div class="db--titleDate__month">${date[0]}</div></div><div class="db--dateList__card">`;
             html += result[key]
                     .map((movie) => {
-                        return `<div class="db--item">""<img src="https://dou.img.lithub.cc/${movie.spec.type}/${
-                                movie.spec.doubanId
-                        }.jpg" referrerpolicy="unsafe-url" class="db--image"><div class="db--score JiEun">${
-                                movie.spec.doubanScore > 0
+                        var img = `https://dou.img.lithub.cc/${movie.spec.type}/${movie.spec.id}.jpg`
+                        return `<div class="db--item">""<img src="${movie.spec.dataType == 'halo'? movie.spec.poster : img}" referrerpolicy="unsafe-url" class="db--image">
+                         <div class="db--score JiEun">${
+                                movie.spec.score > 0
                                         ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" ><path d="M12 20.1l5.82 3.682c1.066.675 2.37-.322 2.09-1.584l-1.543-6.926 5.146-4.667c.94-.85.435-2.465-.799-2.567l-6.773-.602L13.29.89a1.38 1.38 0 0 0-2.581 0l-2.65 6.53-6.774.602C.052 8.126-.453 9.74.486 10.59l5.147 4.666-1.542 6.926c-.28 1.262 1.023 2.26 2.09 1.585L12 20.099z"></path></svg>' +
-                                        movie.spec.doubanScore
+                                        movie.spec.score
                                         : ""
                         }${
                                 movie.spec.year > 0 ? " · " + movie.spec.year : ""
@@ -174,14 +183,13 @@ class HALO_DOUBAN {
             ).innerHTML = `<div class="db--empty"></div>`);
         document.querySelector(".db--list").innerHTML = this.subjects
                 .map((item) => {
-                    return `<div class="db--item">""<img src="https://dou.img.lithub.cc/${item.spec.type}/${
-                            item.spec.doubanId
-                    }.jpg" referrerpolicy="unsafe-url" class="db--image"><div class="ipc-signpost JiEun">${
-                            item.faves.createTime
-                    }</div><div class="db--score JiEun">${
-                            item.spec.doubanScore > 0
+                    var img = `https://dou.img.lithub.cc/${item.spec.type}/${item.spec.id}.jpg`
+                    return `<div class="db--item">""<img src="${item.spec.dataType == 'halo'? item.spec.poster : img}" referrerpolicy="unsafe-url" class="db--image">
+                              <div class="ipc-signpost JiEun">${item.faves.createTime}</div>
+                             <div class="db--score JiEun">${
+                            item.spec.score > 0
                                     ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" ><path d="M12 20.1l5.82 3.682c1.066.675 2.37-.322 2.09-1.584l-1.543-6.926 5.146-4.667c.94-.85.435-2.465-.799-2.567l-6.773-.602L13.29.89a1.38 1.38 0 0 0-2.581 0l-2.65 6.53-6.774.602C.052 8.126-.453 9.74.486 10.59l5.147 4.666-1.542 6.926c-.28 1.262 1.023 2.26 2.09 1.585L12 20.099z"></path></svg>' +
-                                    item.spec.doubanScore
+                                    item.spec.score
                                     : ""
                     }${
                             item.spec.year > 0 ? " · " + item.spec.year : ""

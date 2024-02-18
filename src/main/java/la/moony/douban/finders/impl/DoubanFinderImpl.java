@@ -3,12 +3,15 @@ package la.moony.douban.finders.impl;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Nonnull;
 import la.moony.douban.GenresDoubanIndexer;
+import la.moony.douban.TypeDoubanIndexer;
 import la.moony.douban.extension.DoubanMovie;
 import la.moony.douban.finders.DoubanFinder;
 import la.moony.douban.vo.DoubanGenresVo;
 import la.moony.douban.vo.DoubanMovieVo;
+import la.moony.douban.vo.DoubanTypeVo;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.comparator.Comparators;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -32,6 +35,8 @@ public class DoubanFinderImpl implements DoubanFinder {
 
     private final GenresDoubanIndexer genresDoubanIndexer;
 
+    private final TypeDoubanIndexer typeDoubanIndexer;
+
     public static final Predicate<DoubanMovie> FIXED_PREDICATE = doubanMovie -> true;
 
 
@@ -41,9 +46,9 @@ public class DoubanFinderImpl implements DoubanFinder {
     }
 
     @Override
-    public Flux<DoubanMovieVo> listBy(String genre) {
-        return this.client.list(DoubanMovie.class, FIXED_PREDICATE.and(doubanMovie -> doubanMovie.getSpec()
-                .getGenres().contains(genre)), defaultComparator())
+    public Flux<DoubanMovieVo> listByGenre(String genre) {
+        return doubanMovieList(FIXED_PREDICATE.and(doubanMovie -> doubanMovie.getSpec()
+            .getGenres().contains(genre)))
             .flatMap(this::getDoubanMovieVo);
     }
 
@@ -65,25 +70,41 @@ public class DoubanFinderImpl implements DoubanFinder {
     }
 
     @Override
-    public Mono<ListResult<DoubanMovieVo>> listByGenre(Integer pageNum, Integer pageSize, String genreName) {
-        return pageDoubanMovie(pageNum, pageSize,
-            doubanMovie -> {
-                if (StringUtils.isBlank(genreName)) {
-                    return true;
-                }
-                Set<String> genres = doubanMovie.getSpec().getGenres();
-                if (genres == null) {
-                    return false;
-                }
-                return genres.contains(genreName);
-            },
-            defaultComparator()
-        );
+    public Flux<DoubanTypeVo> listAllType() {
+        return Flux.fromIterable(typeDoubanIndexer.listAllType())
+            .map(typeName -> DoubanTypeVo.builder()
+                .name(getTypeName(typeName))
+                .key(typeName)
+                .doubanCount(typeDoubanIndexer.listPublicByTypeName(typeName).size())
+                .build()
+            );
+    }
+
+    public String getTypeName(String type){
+        String name = "";
+        switch (type){
+            case "movie":
+                name = "电影";
+                break;
+            case "book":
+                name = "图书";
+                break;
+            case "music":
+                name = "音乐";
+                break;
+            case "game":
+                name = "游戏";
+                break;
+            case "drama":
+                name = "舞台剧";
+                break;
+        }
+        return name;
     }
 
     @Override
-    public Mono<ListResult<DoubanMovieVo>> listByType(Integer pageNum, Integer pageSize, String typeName) {
-        return pageDoubanMovie(pageNum, pageSize,
+    public Mono<ListResult<DoubanMovieVo>> listByType(Integer page, Integer size, String typeName) {
+        return pageDoubanMovie(page, size,
             doubanMovie -> {
                 if (StringUtils.isBlank(typeName)) {
                     return true;
@@ -97,6 +118,79 @@ public class DoubanFinderImpl implements DoubanFinder {
             defaultComparator()
         );
     }
+
+    @Override
+    public Mono<ListResult<DoubanMovieVo>> list(Integer page, Integer size, String typeName, String statusName) {
+        return pageDoubanMovie(page, size,
+            FIXED_PREDICATE.and(doubanMovie -> {
+                if (StringUtils.isBlank(typeName)) {
+                    return true;
+                }
+                String type = doubanMovie.getSpec().getType();
+                if (type == null) {
+                    return false;
+                }
+                return type.equals(typeName);
+            }).and(doubanMovie -> {
+                if (StringUtils.isBlank(statusName)) {
+                    return true;
+                }
+                String status = doubanMovie.getFaves().getStatus();
+                if (status == null) {
+                    return false;
+                }
+                return status.equals(statusName);
+            }),
+            defaultComparator()
+        );
+    }
+
+
+    @Override
+    public Flux<DoubanMovieVo> listByType(String type) {
+        return doubanMovieList(FIXED_PREDICATE
+            .and(doubanMovie -> doubanMovie.getFaves().getStatus().equals("done"))
+            .and(doubanMovie -> {
+                if (StringUtils.isBlank(type)){
+                    return true;
+                }else {
+                    if (doubanMovie.getSpec().getType().equals(type)){
+                        return true;
+                    }
+                    return false;
+                }
+            })).flatMap(this::getDoubanMovieVo);
+    }
+
+    @Override
+    public Flux<DoubanMovieVo> list(String type, String status) {
+        return doubanMovieList(FIXED_PREDICATE
+        .and(doubanMovie -> doubanMovie.getFaves().getStatus().equals("done"))
+        .and(doubanMovie -> {
+            if (StringUtils.isBlank(type)){
+                return true;
+            }else {
+                if (doubanMovie.getSpec().getType().equals(type)){
+                    return true;
+                }
+                return false;
+            }
+        }).and(doubanMovie -> {
+            if (StringUtils.isBlank(status)){
+                return true;
+            }else {
+                if (doubanMovie.getFaves().getStatus().equals(status)){
+                    return true;
+                }
+                return false;
+            }
+        })).flatMap(this::getDoubanMovieVo);
+    }
+
+    Flux<DoubanMovie> doubanMovieList(@Nullable Predicate<DoubanMovie> predicate) {
+        return client.list(DoubanMovie.class, predicate, defaultComparator());
+    }
+
 
     private Mono<ListResult<DoubanMovieVo>> pageDoubanMovie(Integer page, Integer size,
         Predicate<DoubanMovie> doubanMoviePredicate,
@@ -130,6 +224,8 @@ public class DoubanFinderImpl implements DoubanFinder {
         return Mono.just(doubanMovieVo);
     }
 
+
+
     int pageNullSafe(Integer page) {
         return ObjectUtils.defaultIfNull(page, 1);
     }
@@ -137,5 +233,6 @@ public class DoubanFinderImpl implements DoubanFinder {
     int sizeNullSafe(Integer size) {
         return ObjectUtils.defaultIfNull(size, 10);
     }
+
 
 }
