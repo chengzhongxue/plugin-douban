@@ -96,10 +96,10 @@ const {
     return data.items;
   },
   refetchInterval: (data) =>  {
-    const deletingFriend = data?.filter(
-      (douban) => !!douban.metadata.deletionTimestamp
-    );
-    return deletingFriend?.length ? 1000 : false;
+    const deletingFriend = data?.filter( (douban) => {
+       return douban.metadata.deletionTimestamp;
+    });
+    return deletingFriend?.length ? 500 : false;
   },
 });
 
@@ -137,7 +137,7 @@ const handleDeleteInBatch = () => {
       } catch (e) {
         console.error(e);
       } finally {
-        queryClient.invalidateQueries({ queryKey: ["doubanMovies"] });
+        await refetch();
       }
     },
   });
@@ -366,11 +366,11 @@ const onEditingModalClose = async () => {
                       },
                       {
                         label: '较近创建',
-                        value: 'createTime,desc',
+                        value: 'faves.createTime,desc',
                       },
                       {
                         label: '较早创建',
-                        value: 'createTime,asc',
+                        value: 'faves.createTime,asc',
                       },
                     ]"
               />
