@@ -23,6 +23,7 @@ import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.ListResult;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
+import run.halo.app.extension.router.selector.FieldSelector;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,9 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static run.halo.app.extension.index.query.QueryFactory.and;
+import static run.halo.app.extension.index.query.QueryFactory.equal;
 
 @Component
 public class DoubanServiceImpl  implements DoubanService {
@@ -128,8 +130,10 @@ public class DoubanServiceImpl  implements DoubanService {
                                 score = node.get("rating").get("value").asText();
                             }
                             String status1 = node.get("status").asText();
-                            Predicate<DoubanMovie> predicate = doubanMovie -> doubanMovie.getSpec().getType().equals(type1) && doubanMovie.getSpec().getId().equals(id);
-                            List<DoubanMovie> doubanMovies = client.list(DoubanMovie.class, predicate, null);
+                            var listOptions = new ListOptions();
+                            var query = and(equal("spec.type", type1),equal("spec.id", id));
+                            listOptions.setFieldSelector(FieldSelector.of(query));
+                            List<DoubanMovie> doubanMovies = client.listAll(DoubanMovie.class, listOptions, null);
                             if (doubanMovies.size()==0){
                                 DoubanMovie doubanMovie = new DoubanMovie();
                                 doubanMovie.setMetadata(new Metadata());
@@ -256,9 +260,10 @@ public class DoubanServiceImpl  implements DoubanService {
     }
 
     public Mono<DoubanMovieVo> tmdbDetail(String type,String id,String apiKey){
-        Predicate<DoubanMovie> predicate = doubanMovie -> doubanMovie.getSpec().getType().equals(type) && doubanMovie.getSpec().getId().equals(id) &&
-            doubanMovie.getSpec().getDataType().equals("tmdb");
-        Flux<DoubanMovie> list = reactiveClient.list(DoubanMovie.class, predicate, null);
+        var listOptions = new ListOptions();
+        var query = and(equal("spec.type", type),equal("spec.id", id),equal("spec.dataType", "tmdb"));
+        listOptions.setFieldSelector(FieldSelector.of(query));
+        Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, null);
         Mono<Boolean> booleanMono = list.hasElements();
         return booleanMono.flatMap(hasValue ->{
             if (hasValue){
@@ -312,8 +317,10 @@ public class DoubanServiceImpl  implements DoubanService {
     }
 
     public Mono<DoubanMovieVo> doubanDetail(String type,String id){
-            Predicate<DoubanMovie> predicate = doubanMovie -> doubanMovie.getSpec().getType().equals(type) && doubanMovie.getSpec().getId().equals(id);
-        Flux<DoubanMovie> list = reactiveClient.list(DoubanMovie.class, predicate, null);
+        var listOptions = new ListOptions();
+        var query = and(equal("spec.type", type),equal("spec.id", id));
+        listOptions.setFieldSelector(FieldSelector.of(query));
+        Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, null);
         Mono<Boolean> booleanMono = list.hasElements();
        return booleanMono.flatMap(hasValue ->{
             if (hasValue){
@@ -446,4 +453,5 @@ public class DoubanServiceImpl  implements DoubanService {
             .retrieve()
             .bodyToMono(JsonNode.class);
     }
+
 }

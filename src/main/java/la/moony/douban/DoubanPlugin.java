@@ -53,6 +53,10 @@ public class DoubanPlugin extends BasePlugin {
                 .setIndexFunc(
                     simpleAttribute(DoubanMovie.class, doubanMovie -> doubanMovie.getSpec().getName())));
             indexSpecs.add(new IndexSpec()
+                .setName("spec.id")
+                .setIndexFunc(
+                    simpleAttribute(DoubanMovie.class, doubanMovie -> doubanMovie.getSpec().getId())));
+            indexSpecs.add(new IndexSpec()
                 .setName("faves.status")
                 .setIndexFunc(simpleAttribute(DoubanMovie.class, doubanMovie -> {
                     var status = doubanMovie.getFaves().getStatus();
