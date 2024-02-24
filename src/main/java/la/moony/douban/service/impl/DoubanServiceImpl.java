@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.Nonnull;
+import la.moony.douban.DoubanMovieQuery;
 import la.moony.douban.DoubanRequest;
 import la.moony.douban.extension.DoubanMovie;
 import la.moony.douban.service.DoubanService;
@@ -11,12 +12,15 @@ import la.moony.douban.vo.DoubanMovieVo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.ExtensionClient;
+import run.halo.app.extension.ListOptions;
+import run.halo.app.extension.ListResult;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.plugin.ReactiveSettingFetcher;
@@ -28,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -192,6 +197,28 @@ public class DoubanServiceImpl  implements DoubanService {
             return getDoubanMovieVo(doubanMovie);
         }
 
+    }
+
+    @Override
+    public Flux<String> listAllGenres() {
+        return reactiveClient.listAll(DoubanMovie.class, new ListOptions(),
+                Sort.by("metadata.name").descending())
+            .flatMapIterable(doubanMovie -> {
+                var genres = doubanMovie.getSpec().getGenres();
+                return Objects.requireNonNullElseGet(genres, List::of);
+            })
+            .distinct();
+    }
+
+    @Override
+    public Mono<ListResult<DoubanMovie>> listDoubanMovie(DoubanMovieQuery query) {
+        return reactiveClient.listBy(DoubanMovie.class, query.toListOptions(), query.toPageRequest())
+            .flatMap(listResult -> Flux.fromStream(listResult.get())
+                .collectList()
+                .map(list -> new ListResult<>(listResult.getPage(), listResult.getSize(),
+                    listResult.getTotal(), list)
+                )
+            );
     }
 
     public Mono<DoubanMovieVo> embedHandlerDoubanlist(String type,String id){

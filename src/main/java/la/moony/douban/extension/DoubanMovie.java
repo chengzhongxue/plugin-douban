@@ -1,5 +1,6 @@
 package la.moony.douban.extension;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -15,10 +16,14 @@ import java.util.Set;
     version = "v1alpha1", singular = "doubanmovie", plural = "doubanmovies")
 public class DoubanMovie extends AbstractExtension {
 
+    public static final String REQUIRE_SYNC_ON_STARTUP_INDEX_NAME = "requireSyncOnStartup";
+
 
     private DoubanMovieSpec spec;
 
     private DoubanMovieFaves faves;
+
+    private Status status;
 
 
     @Data
@@ -45,6 +50,13 @@ public class DoubanMovie extends AbstractExtension {
         private Instant createTime;
         private String score;
         private String status;
+    }
+
+
+    @Data
+    @Schema(name = "DoubanStatus")
+    public static class Status {
+        private long observedVersion;
     }
 
 

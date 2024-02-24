@@ -1,36 +1,39 @@
 package la.moony.douban;
 
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Schema;
 import la.moony.douban.extension.DoubanMovie;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
-import run.halo.app.core.extension.endpoint.SortResolver;
-import run.halo.app.extension.Extension;
-import run.halo.app.extension.router.IListRequest;
+import run.halo.app.extension.ListOptions;
+import run.halo.app.extension.PageRequest;
+import run.halo.app.extension.PageRequestImpl;
+import run.halo.app.extension.router.SortableRequest;
+import run.halo.app.extension.router.selector.FieldSelector;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
-
 import static java.util.Comparator.comparing;
-import static run.halo.app.extension.router.selector.SelectorUtil.labelAndFieldSelectorToPredicate;
+import static run.halo.app.extension.index.query.QueryFactory.all;
+import static run.halo.app.extension.index.query.QueryFactory.and;
+import static run.halo.app.extension.index.query.QueryFactory.contains;
+import static run.halo.app.extension.index.query.QueryFactory.equal;
+import static run.halo.app.extension.router.selector.SelectorUtil.labelAndFieldSelectorToListOptions;
 
-public class DoubanMovieQuery extends IListRequest.QueryListRequest {
+public class DoubanMovieQuery extends SortableRequest {
 
-    private final ServerWebExchange exchange;
+    private final MultiValueMap<String, String> queryParams;
+
 
     public DoubanMovieQuery(ServerWebExchange exchange) {
-        super(exchange.getRequest().getQueryParams());
-        this.exchange = exchange;
+        super(exchange);
+        this.queryParams = exchange.getRequest().getQueryParams();
     }
 
+    @Nullable
     public String getKeyword() {
-        return queryParams.getFirst("keyword");
+        return StringUtils.defaultIfBlank(queryParams.getFirst("keyword"), null);
     }
 
     @Nullable
@@ -52,69 +55,33 @@ public class DoubanMovieQuery extends IListRequest.QueryListRequest {
         return StringUtils.defaultIfBlank(queryParams.getFirst("genre"), null);
     }
 
-    @ArraySchema(uniqueItems = true,
-        arraySchema = @Schema(name = "sort",
-            description = "Sort property and direction of the list result. Supported fields: "
-                + "creationTimestamp, priority"),
-        schema = @Schema(description = "doubanMovie field,asc or field,desc",
-            implementation = String.class,
-            example = "creationTimestamp,desc"))
-    public Sort getSort() {
-        return SortResolver.defaultInstance.resolve(exchange);
-    }
-
-    public Predicate<DoubanMovie> toPredicate() {
-        Predicate<DoubanMovie> predicate = doubanMovie -> {return true;};
-        Predicate<DoubanMovie> keywordPredicate = doubanMovie -> {
-            var keyword = getKeyword();
-            if (StringUtils.isBlank(keyword)) {
-                return true;
-            }
-            String keywordToSearch = keyword.trim().toLowerCase();
-            return StringUtils.containsAnyIgnoreCase(doubanMovie.getSpec().getName(),
-                keywordToSearch)
-                || StringUtils.containsAnyIgnoreCase(doubanMovie.getSpec().getCardSubtitle(),
-                keywordToSearch);
-        };
-
-        if (StringUtils.isNotEmpty(queryParams.getFirst("status"))){
-            String status = getStatus();
-            predicate = predicate.and(doubanMovie -> {
-                if (doubanMovie.getFaves()!=null){
-                    if (StringUtils.isNotEmpty(doubanMovie.getFaves().getStatus())){
-                        return doubanMovie.getFaves().getStatus().equals(status);
-                    }
-                    return false;
-                }else {
-                    return false;
-                }
-            });
+    public ListOptions toListOptions() {
+        var listOptions =
+            labelAndFieldSelectorToListOptions(getLabelSelector(), getFieldSelector());
+        var query = all();
+        if (StringUtils.isNotBlank(getStatus())) {
+            query = and(query, equal("faves.status", getStatus()));
+        }
+        if (StringUtils.isNotBlank(getType())) {
+            query = and(query, equal("spec.type", getType()));
+        }
+        if (StringUtils.isNotBlank(getDataType())) {
+            query = and(query, equal("spec.dataType", getDataType()));
         }
 
-        if (StringUtils.isNotEmpty(queryParams.getFirst("type"))){
-            String type = getType();
-            predicate = predicate.and(doubanMovie -> doubanMovie.getSpec().getType().equals(type));
+        if (StringUtils.isNotBlank(getGenre())) {
+            query = and(query, equal("spec.genres", getGenre()));
         }
 
-        if (StringUtils.isNotEmpty(queryParams.getFirst("dataType"))){
-            String dataType = getDataType();
-            predicate = predicate.and(doubanMovie -> doubanMovie.getSpec().getDataType().equals(dataType));
+        if (listOptions.getFieldSelector() != null
+            && listOptions.getFieldSelector().query() != null) {
+            query = and(query, listOptions.getFieldSelector().query());
         }
-
-        if (StringUtils.isNotEmpty(queryParams.getFirst("genre"))) {
-            String genre = getGenre();
-            predicate = predicate.and(doubanMovie -> {
-                Set<String> genres = doubanMovie.getSpec().getGenres();
-                if (CollectionUtils.isEmpty(genres)) {
-                    return false;
-                }
-                return doubanMovie.getSpec().getGenres().contains(genre);
-            });
+        if (StringUtils.isNotBlank(getKeyword())) {
+            query = and(query, contains("spec.name", getKeyword()));
         }
-
-        Predicate<Extension> labelAndFieldSelectorToPredicate =
-            labelAndFieldSelectorToPredicate(getLabelSelector(), getFieldSelector());
-        return predicate.and(keywordPredicate).and(labelAndFieldSelectorToPredicate);
+        listOptions.setFieldSelector(FieldSelector.of(query));
+        return listOptions;
     }
 
     public Comparator<DoubanMovie> toComparator() {
@@ -138,9 +105,12 @@ public class DoubanMovieQuery extends IListRequest.QueryListRequest {
     }
 
 
-    public static <E extends Extension> Comparator<E> compareName(boolean asc) {
-        var comparator = Comparator.<E, String>comparing(e -> e.getMetadata().getName());
-        return asc ? comparator : comparator.reversed();
+    public PageRequest toPageRequest() {
+        var sort = getSort();
+        if (sort.isUnsorted()) {
+            sort = Sort.by("faves.createTime").descending();
+        }
+        return PageRequestImpl.of(getPage(), getSize(), sort);
     }
 
 
