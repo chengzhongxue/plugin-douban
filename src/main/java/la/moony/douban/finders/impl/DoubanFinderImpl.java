@@ -15,14 +15,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.comparator.Comparators;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import run.halo.app.core.extension.User;
 import run.halo.app.extension.ListResult;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.theme.finders.Finder;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -149,7 +147,13 @@ public class DoubanFinderImpl implements DoubanFinder {
     @Override
     public Flux<DoubanMovieVo> listByType(String type) {
         return doubanMovieList(FIXED_PREDICATE
-            .and(doubanMovie -> doubanMovie.getFaves().getStatus().equals("done"))
+            .and(doubanMovie -> {
+                if (doubanMovie.getFaves().getStatus()==null){
+                    return  false;
+                }else {
+                    return doubanMovie.getFaves().getStatus().equals("done");
+                }
+            })
             .and(doubanMovie -> {
                 if (StringUtils.isBlank(type)){
                     return true;
@@ -165,7 +169,13 @@ public class DoubanFinderImpl implements DoubanFinder {
     @Override
     public Flux<DoubanMovieVo> list(String type, String status) {
         return doubanMovieList(FIXED_PREDICATE
-        .and(doubanMovie -> doubanMovie.getFaves().getStatus().equals("done"))
+        .and(doubanMovie -> {
+            if (doubanMovie.getFaves().getStatus()==null){
+                return  false;
+            }else {
+                return doubanMovie.getFaves().getStatus().equals("done");
+            }
+        })
         .and(doubanMovie -> {
             if (StringUtils.isBlank(type)){
                 return true;
@@ -179,10 +189,14 @@ public class DoubanFinderImpl implements DoubanFinder {
             if (StringUtils.isBlank(status)){
                 return true;
             }else {
-                if (doubanMovie.getFaves().getStatus().equals(status)){
-                    return true;
+                if (doubanMovie.getFaves().getStatus()==null){
+                    return false;
+                }else{
+                    if (doubanMovie.getFaves().getStatus().equals(status)){
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
             }
         })).flatMap(this::getDoubanMovieVo);
     }

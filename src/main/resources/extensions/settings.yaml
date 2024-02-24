@@ -16,3 +16,7 @@ spec:
           label: 豆瓣的ID
           name: doubanId
           help: 我的豆瓣 https://www.douban.com/people/xxxx  xxxx 就是你的ID
+        - $formkit: text
+          label: TMDB API Key
+          name: apiKey
+          help: 设置TMDB API Key在https://www.themoviedb.org/settings/api 自行申请

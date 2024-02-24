@@ -3,35 +3,35 @@ package la.moony.douban.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.annotation.Nonnull;
 import la.moony.douban.DoubanRequest;
 import la.moony.douban.extension.DoubanMovie;
 import la.moony.douban.service.DoubanService;
+import la.moony.douban.vo.DoubanMovieVo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.ExtensionClient;
 import run.halo.app.extension.Metadata;
+import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.plugin.ReactiveSettingFetcher;
-import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class DoubanServiceImpl  implements DoubanService {
@@ -39,16 +39,20 @@ public class DoubanServiceImpl  implements DoubanService {
     private final Logger log = LoggerFactory.getLogger(DoubanServiceImpl.class);
 
     private final ExtensionClient client;
+    private final ReactiveExtensionClient reactiveClient;
 
     private final WebClient webClient = WebClient.builder().build();
-    private static final String DB_API_URL = "https://fatesinger.com/dbapi/user/{userid}/interests?count={count}&start={start}&type={type}&status={status}";
+    private static final String DB_API_LIST_URL = "https://fatesinger.com/dbapi/user/{userid}/interests?count={count}&start={start}&type={type}&status={status}";
 
+    private static final String DB_API_DETAIL_URL = "https://fatesinger.com/dbapi/{type}/{id}?ck=xgtY&for_mobile=1";
     private static final String TMDB_API_URL = "https://hk.fatesinger.com/api/{type}/{tmdbId}?api_key={apiKey}&language=zh-CN";
 
     private final ReactiveSettingFetcher settingFetcher;
 
-    public DoubanServiceImpl(ExtensionClient client, ReactiveSettingFetcher settingFetcher) {
+    public DoubanServiceImpl(ExtensionClient client, ReactiveExtensionClient reactiveClient,
+        ReactiveSettingFetcher settingFetcher) {
         this.client = client;
+        this.reactiveClient = reactiveClient;
         this.settingFetcher = settingFetcher;
     }
 
@@ -164,10 +168,237 @@ public class DoubanServiceImpl  implements DoubanService {
         log.info("豆瓣结束抓取数据");
     }
 
+
+    @Override
+    public Mono<DoubanMovieVo> getDoubanDetail(String url) {
+        DoubanMovie doubanMovie = new DoubanMovie();
+        Map<String, Object> matcher = matcher(url);
+        String type = (String) matcher.get("type");
+        String id =  (String) matcher.get("id");
+        int index =  (int) matcher.get("index");
+        if (StringUtils.isNotEmpty(type) && StringUtils.isNotEmpty(id)){
+            switch (index){
+                case 1:
+                    return embedHandlerDoubanlist(type,id);
+                case 2:
+                    return embedHandlerDoubanablum(type,id);
+                case 3:
+                    return embedHandlerDoubandrama(type,id);
+                case 4:
+                    return embedHandlerTheMovieDb(type,id);
+            }
+            return getDoubanMovieVo(doubanMovie);
+        }else {
+            return getDoubanMovieVo(doubanMovie);
+        }
+
+    }
+
+    public Mono<DoubanMovieVo> embedHandlerDoubanlist(String type,String id){
+
+        if (StringUtils.contains("movie,book,music", type)){
+           return doubanDetail(type,id);
+        }
+        return getDoubanMovieVo(new DoubanMovie());
+    }
+
+    public Mono<DoubanMovieVo> embedHandlerDoubanablum(String type,String id){
+        if (StringUtils.contains("game", type)){
+            return doubanDetail(type,id);
+        }
+        return getDoubanMovieVo(new DoubanMovie());
+    }
+
+    public Mono<DoubanMovieVo> embedHandlerDoubandrama(String type,String id){
+        if (StringUtils.contains("drama", type)){
+            return doubanDetail(type,id);
+        }
+        return getDoubanMovieVo(new DoubanMovie());
+    }
+
+    public Mono<DoubanMovieVo> embedHandlerTheMovieDb(String type,String id){
+        if (StringUtils.contains("tv,movie", type)){
+            return getApiKey().flatMap(apiKey->{
+                if (StringUtils.isNotEmpty(apiKey) ){
+                    return tmdbDetail(type,id,apiKey);
+                }
+                return getDoubanMovieVo(new DoubanMovie());
+            });
+        }
+        return getDoubanMovieVo(new DoubanMovie());
+    }
+
+    public Mono<DoubanMovieVo> tmdbDetail(String type,String id,String apiKey){
+        Predicate<DoubanMovie> predicate = doubanMovie -> doubanMovie.getSpec().getType().equals(type) && doubanMovie.getSpec().getId().equals(id) &&
+            doubanMovie.getSpec().getDataType().equals("tmdb");
+        Flux<DoubanMovie> list = reactiveClient.list(DoubanMovie.class, predicate, null);
+        Mono<Boolean> booleanMono = list.hasElements();
+        return booleanMono.flatMap(hasValue ->{
+            if (hasValue){
+                return (Mono<DoubanMovieVo>) list.next().flatMap(doubanMovie -> {
+                    return getDoubanMovieVo(doubanMovie);
+                });
+            }else {
+                DoubanMovie doubanMovieDetail = new DoubanMovie();
+                return tmdbDetailRequest(type, id,apiKey).flatMap(jsonNode->{
+                    String name = jsonNode.get("title")!=null ? jsonNode.get("title").asText() : jsonNode.get("name").asText();
+                    String poster = "https://image.tmdb.org/t/p/original"+jsonNode.get("poster_path").asText();
+                    String tmdbId = jsonNode.get("id").asText();
+                    String doubanScore = jsonNode.get("vote_average").asText();
+                    String link = jsonNode.get("homepage").asText();
+                    String year = "";
+                    String pubdate = jsonNode.get("release_date")!=null ? jsonNode.get("release_date").asText() : jsonNode.get("first_air_date").asText();
+                    String cardSubtitle = jsonNode.get("overview").asText();
+                    Set<String> genres = new HashSet();
+                    if (jsonNode.get("genres")!=null){
+                        jsonNode.get("genres").forEach(genre -> {
+                            genres.add(genre.get("name").asText());
+                        });
+                    }
+                    doubanMovieDetail.setMetadata(new Metadata());
+                    doubanMovieDetail.getMetadata().setGenerateName("douban-movie-");
+                    doubanMovieDetail.setSpec(new DoubanMovie.DoubanMovieSpec());
+                    doubanMovieDetail.getSpec().setName(name);
+                    doubanMovieDetail.getSpec().setPoster(poster);
+                    doubanMovieDetail.getSpec().setId(tmdbId);
+                    doubanMovieDetail.getSpec().setScore(doubanScore);
+                    doubanMovieDetail.getSpec().setLink(link);
+                    doubanMovieDetail.getSpec().setYear(year);
+                    doubanMovieDetail.getSpec().setType(type);
+                    doubanMovieDetail.getSpec().setPubdate(pubdate);
+                    doubanMovieDetail.getSpec().setCardSubtitle(cardSubtitle);
+                    doubanMovieDetail.getSpec().setGenres(genres);
+                    doubanMovieDetail.getSpec().setDataType("tmdb");
+                    doubanMovieDetail.setFaves(new DoubanMovie.DoubanMovieFaves());
+                    doubanMovieDetail.getFaves().setCreateTime(Instant.now());
+                    doubanMovieDetail.getFaves().setRemark(null);
+                    doubanMovieDetail.getFaves().setScore(null);
+                    doubanMovieDetail.getFaves().setStatus(null);
+                    reactiveClient.create(doubanMovieDetail).subscribe();
+                    return getDoubanMovieVo(doubanMovieDetail);
+                }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
+                    log.error("Resource not found: ",error.getMessage());
+                    return getDoubanMovieVo(doubanMovieDetail);
+                });
+            }
+        });
+    }
+
+    public Mono<DoubanMovieVo> doubanDetail(String type,String id){
+            Predicate<DoubanMovie> predicate = doubanMovie -> doubanMovie.getSpec().getType().equals(type) && doubanMovie.getSpec().getId().equals(id);
+        Flux<DoubanMovie> list = reactiveClient.list(DoubanMovie.class, predicate, null);
+        Mono<Boolean> booleanMono = list.hasElements();
+       return booleanMono.flatMap(hasValue ->{
+            if (hasValue){
+                return (Mono<DoubanMovieVo>) list.next().flatMap(doubanMovie -> {
+                    return getDoubanMovieVo(doubanMovie);
+                });
+            }else {
+               DoubanMovie doubanMovieDetail = new DoubanMovie();
+              return doubanDetailRequest(type, id).flatMap(jsonNode->{
+                   String name = jsonNode.get("title").asText();
+                   String poster = jsonNode.get("pic").get("large").asText();
+                   String doubanId = jsonNode.get("id").asText();
+                   String doubanScore = jsonNode.get("rating").get("value").asText();
+                   String link = jsonNode.get("url").asText();
+                   String year = "";
+                   if (jsonNode.get("year")!=null){
+                       year =jsonNode.get("year").asText();
+                   }
+                   String pubdate = "";
+                   if (jsonNode.get("pubdate")!=null){
+                       if (jsonNode.get("pubdate").isArray() && jsonNode.get("pubdate").size()>0){
+                           pubdate = jsonNode.get("pubdate").get(0).asText("");
+                       }
+                   }
+                   String cardSubtitle = jsonNode.get("card_subtitle").asText();
+                   Set<String> genres = new HashSet();
+                   if (jsonNode.get("genres")!=null){
+                       jsonNode.get("genres").forEach(genre -> {
+                           genres.add(genre.asText());
+                       });
+                   }
+                   doubanMovieDetail.setMetadata(new Metadata());
+                   doubanMovieDetail.getMetadata().setGenerateName("douban-movie-");
+                   doubanMovieDetail.setSpec(new DoubanMovie.DoubanMovieSpec());
+                   doubanMovieDetail.getSpec().setName(name);
+                   doubanMovieDetail.getSpec().setPoster(poster);
+                   doubanMovieDetail.getSpec().setId(doubanId);
+                   doubanMovieDetail.getSpec().setScore(doubanScore);
+                   doubanMovieDetail.getSpec().setLink(link);
+                   doubanMovieDetail.getSpec().setYear(year);
+                   doubanMovieDetail.getSpec().setType(type);
+                   doubanMovieDetail.getSpec().setPubdate(pubdate);
+                   doubanMovieDetail.getSpec().setCardSubtitle(cardSubtitle);
+                   doubanMovieDetail.getSpec().setGenres(genres);
+                   doubanMovieDetail.getSpec().setDataType("db");
+                   doubanMovieDetail.setFaves(new DoubanMovie.DoubanMovieFaves());
+                   doubanMovieDetail.getFaves().setCreateTime(Instant.now());
+                   doubanMovieDetail.getFaves().setRemark(null);
+                   doubanMovieDetail.getFaves().setScore(null);
+                   doubanMovieDetail.getFaves().setStatus(null);
+                   reactiveClient.create(doubanMovieDetail).subscribe();
+                   return getDoubanMovieVo(doubanMovieDetail);
+              }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
+                  log.error("Resource not found: ",error.getMessage());
+                  return getDoubanMovieVo(doubanMovieDetail);
+              });
+            }
+        });
+    }
+
+    public Map<String,Object> matcher(String url){
+        Map<String,Object> map = new HashMap<>();
+        String[] patterns = {
+            "https?://(\\w+)\\.douban\\.com/subject/(\\d+)",
+            "https?://www\\.douban\\.com/(\\w+)/(\\d+)",
+            "https?://www\\.douban\\.com/location/(\\w+)/(\\d+)",
+            "https?://www\\.themoviedb\\.org/(\\w+)/(\\d+)"
+        };
+        String input = url;
+        int index = 0;
+        for (String regex : patterns) {
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(input);
+            String type = null;
+            String id = null;
+            index = index+1;
+            if (matcher.find()) {
+                type = matcher.group(1);
+                id = matcher.group(2);
+                map.put("type",type);
+                map.put("id",id);
+                map.put("index",index);
+                return map;
+            }else {
+                log.info("No match found {}",url);
+            }
+            map.put("type",type);
+            map.put("id",id);
+            map.put("index",index);
+        }
+        return map;
+    }
+
+    String getDoubanId() {
+        return this.settingFetcher.get("base")
+            .map(setting -> setting.get("doubanId").asText()).block();
+    }
+
+    Mono<String> getApiKey() {
+        return this.settingFetcher.get("base")
+            .map(setting -> setting.get("apiKey").asText());
+    }
+
+    private Mono<DoubanMovieVo> getDoubanMovieVo(@Nonnull DoubanMovie doubanMovie) {
+        DoubanMovieVo doubanMovieVo = DoubanMovieVo.from(doubanMovie);
+        return Mono.just(doubanMovieVo);
+    }
+
     @Override
     public Mono<ArrayNode> listDouban(DoubanRequest request) {
         return webClient.get()
-            .uri(DB_API_URL, request.getUserId(),request.getCount(),request.getStart(),request.getType().name(),request.getStatus().name())
+            .uri(DB_API_LIST_URL, request.getUserId(),request.getCount(),request.getStart(),request.getType().name(),request.getStatus().name())
             .retrieve()
             .bodyToMono(ObjectNode.class)
             .map(item->{
@@ -175,8 +406,17 @@ public class DoubanServiceImpl  implements DoubanService {
             });
     }
 
-    String getDoubanId() {
-        return this.settingFetcher.get("base")
-            .map(setting -> setting.get("doubanId").asText()).block();
+    public Mono<JsonNode> doubanDetailRequest(String type,String id) {
+        return WebClient.create().get()
+            .uri(DB_API_DETAIL_URL, type,id)
+            .retrieve()
+            .bodyToMono(JsonNode.class);
+    }
+
+    public Mono<JsonNode> tmdbDetailRequest(String type,String tmdbId,String apiKey) {
+        return WebClient.create().get()
+            .uri(TMDB_API_URL, type,tmdbId,apiKey)
+            .retrieve()
+            .bodyToMono(JsonNode.class);
     }
 }

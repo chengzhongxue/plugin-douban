@@ -28,6 +28,7 @@ const selecteDoubanMovies = ref<string[]>([]);
 const checkedAll = ref(false);
 const selectedSort = useRouteQuery<string | undefined>("sort");
 const selectedStatus = useRouteQuery<string | undefined>("status");
+const selectedDataType = useRouteQuery<string | undefined>("dataType");
 const selectedType = useRouteQuery<string | undefined>("type");
 
 
@@ -43,6 +44,7 @@ watch(
   () => [
     selectedSort.value,
     selectedStatus.value,
+    selectedDataType.value,
     selectedType.value,
     keyword.value,
   ],
@@ -55,13 +57,15 @@ function handleClearFilters() {
   selectedSort.value = undefined;
   selectedStatus.value = undefined;
   selectedType.value = undefined;
+  selectedDataType.value = undefined;
 }
 
 const hasFilters = computed(() => {
   return (
     selectedSort.value ||
     selectedStatus.value ||
-    selectedType.value
+    selectedType.value ||
+    selectedDataType.value
   );
 });
 
@@ -71,7 +75,7 @@ const {
   isFetching,
   refetch,
 } = useQuery({
-  queryKey: ["doubanMovies", page, size,selectedSort,selectedStatus,selectedType,keyword],
+  queryKey: ["doubanMovies", page, size,selectedSort,selectedDataType,selectedStatus,selectedType,keyword],
   queryFn: async () => {
     
     const { data } = await apiClient.get<FriendDoubanMovieList>(
@@ -81,6 +85,7 @@ const {
           page: page.value,
           size: size.value,
           sort: selectedSort.value,
+          dataType: selectedDataType.value,
           status: selectedStatus.value,
           type : selectedType.value,
           keyword: keyword?.value
@@ -277,6 +282,28 @@ const onEditingModalClose = async () => {
               <FilterCleanButton
                 v-if="hasFilters"
                 @click="handleClearFilters"
+              />
+              <FilterDropdown
+                v-model="selectedDataType"
+                label="数据类型"
+                :items="[
+                    {
+                      label: '全部',
+                      value: undefined,
+                    },
+                    {
+                      label: '豆瓣',
+                      value: 'db',
+                    },
+                    {
+                      label: 'TMDB',
+                      value: 'tmdb',
+                    },
+                    {
+                      label: '手动添加',
+                      value: 'halo',
+                    },
+                  ]"
               />
               <FilterDropdown
                 v-model="selectedStatus"

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
-import { inject, ref, computed, nextTick, watch, type Ref } from "vue";
+import { ref, computed, nextTick, watch} from "vue";
 import type { DoubanMovie } from "@/types";
 import apiClient from "@/utils/api-client";
 import cloneDeep from "lodash.clonedeep";

@@ -43,6 +43,11 @@ public class DoubanMovieQuery extends IListRequest.QueryListRequest {
         return queryParams.getFirst("type");
     }
 
+    @Nullable
+    public String getDataType() {
+        return queryParams.getFirst("dataType");
+    }
+
     public String getGenre() {
         return StringUtils.defaultIfBlank(queryParams.getFirst("genre"), null);
     }
@@ -74,7 +79,16 @@ public class DoubanMovieQuery extends IListRequest.QueryListRequest {
 
         if (StringUtils.isNotEmpty(queryParams.getFirst("status"))){
             String status = getStatus();
-            predicate = predicate.and(doubanMovie -> doubanMovie.getFaves().getStatus().equals(status));
+            predicate = predicate.and(doubanMovie -> {
+                if (doubanMovie.getFaves()!=null){
+                    if (StringUtils.isNotEmpty(doubanMovie.getFaves().getStatus())){
+                        return doubanMovie.getFaves().getStatus().equals(status);
+                    }
+                    return false;
+                }else {
+                    return false;
+                }
+            });
         }
 
         if (StringUtils.isNotEmpty(queryParams.getFirst("type"))){
@@ -82,6 +96,10 @@ public class DoubanMovieQuery extends IListRequest.QueryListRequest {
             predicate = predicate.and(doubanMovie -> doubanMovie.getSpec().getType().equals(type));
         }
 
+        if (StringUtils.isNotEmpty(queryParams.getFirst("dataType"))){
+            String dataType = getDataType();
+            predicate = predicate.and(doubanMovie -> doubanMovie.getSpec().getDataType().equals(dataType));
+        }
 
         if (StringUtils.isNotEmpty(queryParams.getFirst("genre"))) {
             String genre = getGenre();

@@ -1,8 +1,9 @@
 import { definePlugin } from "@halo-dev/console-shared";
 import Douban from "./views/Douban.vue";
 import Cron from "./views/Cron.vue";
-import { IconLink } from "@halo-dev/components";
+import TablerBrandDouban from '~icons/tabler/brand-douban';
 import { markRaw } from "vue";
+import { DoubanExtension } from "./editor";
 
 export default definePlugin({
   name: "plugin-douban",
@@ -20,7 +21,7 @@ export default definePlugin({
           menu: {
             name: "豆瓣",
             group: "content",
-            icon: markRaw(IconLink),
+            icon: markRaw(TablerBrandDouban),
             priority: 20,
           },
         },
@@ -44,5 +45,9 @@ export default definePlugin({
       },
     },
   ],
-  extensionPoints: {},
+  extensionPoints: {
+    "default:editor:extension:create": () => {
+      return [DoubanExtension];
+    },
+  },
 });

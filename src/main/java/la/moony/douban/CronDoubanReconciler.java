@@ -15,7 +15,6 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 import run.halo.app.extension.ExtensionUtil;
-import run.halo.app.extension.Metadata;
 import run.halo.app.extension.controller.Controller;
 import run.halo.app.extension.controller.ControllerBuilder;
 import run.halo.app.extension.controller.Reconciler;
