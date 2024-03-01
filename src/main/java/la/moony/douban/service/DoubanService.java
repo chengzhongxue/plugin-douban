@@ -13,8 +13,6 @@ public interface DoubanService {
 
     void synchronizationDouban();
 
-    Mono<ArrayNode> listDouban(DoubanRequest request);
-
     Mono<DoubanMovieVo> getDoubanDetail(String url);
 
     Flux<String> listAllGenres();

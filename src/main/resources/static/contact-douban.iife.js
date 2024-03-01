@@ -26,7 +26,7 @@
                         href="${data.spec.link}">${data.spec.name}</a></div>
                 <div class="rating"><span class="allstardark"><span class="allstarlight" style="width: ${data.spec.score * 10}%;"></span></span><span
                         class="rating_nums">${data.spec.score}</span></div>
-                <div class="abstract">${data.spec.cardSubtitle}</div>
+                <div class="abstract">${data.faves?.remark !=null && data.faves?.remark !='' ? data.faves?.remark : data.spec.cardSubtitle}</div>
             </div>
         </div>`
         e.appendChild(r);

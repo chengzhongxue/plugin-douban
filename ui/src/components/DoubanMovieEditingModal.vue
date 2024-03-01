@@ -192,7 +192,6 @@ const handleSaveFriend = async () => {
             label="标题"
           ></FormKit>
           <FormKit
-            v-if="formState.spec.dataType=='halo'"
             type="text"
             v-model="formState.spec.link"
             name="link"

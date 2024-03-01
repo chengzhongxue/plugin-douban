@@ -6,7 +6,7 @@ import { computed, onMounted, ref } from "vue";
 import apiClient from "@/utils/api-client";
 import type {DoubanMovie} from "@/types";
 import {formatDatetime} from "@/utils/date";
-
+import { VButton,VSpace,VDropdown} from "@halo-dev/components";
 const selecteDoubanMovie = ref<DoubanMovie | undefined>();
 
 const props = defineProps<{
@@ -32,11 +32,10 @@ function handleSetFocus() {
   props.editor.commands.setNodeSelection(props.getPos());
 }
 
-const inputRef = ref();
+const editorLinkObtain = ref();
 
 onMounted(() => {
   if (!src.value) {
-    inputRef.value.focus();
   }else {
     handleCheckAllChange();
   }
@@ -48,41 +47,87 @@ const handleCheckAllChange = async () => {
   selecteDoubanMovie.value = data
 };
 
+const handleEnterSetExternalLink = () => {
+  if (!editorLinkObtain.value) {
+    return;
+  }
+  props.updateAttributes({
+    src: editorLinkObtain.value,
+  });
+};
+
+const handleResetInit = () => {
+  props.updateAttributes({src: ""});
+};
+
 </script>
 
 <template>
   <node-view-wrapper as="div" class="inline-block w-full">
     <div
       class="inline-block overflow-hidden transition-all text-center relative h-full w-full"
+      :class="{
+        'rounded ring-2': selected,
+      }"
     >
-      <div v-if="!src || selecteDoubanMovie?.spec==undefined" class="p-1.5">
-        <input
-          ref="inputRef"
-          v-model.lazy="src"
-          class="block px-2 w-full py-1.5 text-sm text-gray-900 border border-gray-300 rounded-md bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="输入链接，按回车确定"
-          tabindex="-1"
-          @focus="handleSetFocus"
-          @change="handleCheckAllChange"
-        />
-      </div>
-      <div v-else @mouseenter="handleSetFocus" class="doulist-item">
-        <div class="doulist-subject">
-          <div class="doulist-post"><img decoding="async" referrerpolicy="no-referrer"
-                                         :src="selecteDoubanMovie?.spec.poster" class="fade-before fade-after"></div>
-          <div class="db--viewTime JiEun">Marked {{formatDatetime(selecteDoubanMovie?.faves.createTime)}}</div>
-          <div class="doulist-content">
-            <div class="doulist-title"><a :href="selecteDoubanMovie?.spec.link" class="cute" target="_blank"
-                                          rel="external nofollow">{{selecteDoubanMovie?.spec.name}}</a></div>
-            <div class="rating"><span class="allstardark"><span class="allstarlight" :style="'width:'+selecteDoubanMovie?.spec.score * 10+'%'"></span></span><span
-              class="rating_nums"> {{selecteDoubanMovie?.spec.score}} </span></div>
-            <div class="abstract">
-              {{selecteDoubanMovie?.spec.cardSubtitle}}
+      <div v-if="!src || selecteDoubanMovie?.spec==undefined" class="relative">
+        <div class="flex h-64 w-full items-center justify-center" style="height: 180px;">
+          <div
+            class="flex h-full w-full cursor-pointer flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50"
+          >
+            <div
+              class="flex flex-col items-center justify-center space-y-7 pb-6 pt-5 editor-link-obtain"
+            >
+              <VSpace>
+                <VDropdown>
+                  <div class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20" style="margin: 0.8em 1.5em;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" style="font-size: 1.6rem;">
+                      <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h16M5 4h14M8 8h8a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2m8 6l-2 6m-6-3l1 3">
+                      </path>
+                    </svg>
+                  </div>
+                  <VButton>输入链接</VButton>
+                  <template #popper>
+                    <input
+                      v-model="editorLinkObtain"
+                      class="block w-full rounded-md border border-gray-300 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 hover:bg-gray-100"
+                      placeholder="输入链接，按回车确定"
+                      @keydown.enter="handleEnterSetExternalLink"
+                      @change="handleCheckAllChange"
+                    />
+                  </template>
+                </VDropdown>
+              </VSpace>
             </div>
           </div>
         </div>
       </div>
-      
+      <div v-else class="group relative">
+        <div @mouseenter="handleSetFocus" class="doulist-item">
+          <div class="doulist-subject">
+            <div class="doulist-post"><img decoding="async" referrerpolicy="no-referrer"
+                                           :src="selecteDoubanMovie?.spec.poster" class="fade-before fade-after"></div>
+            <div class="db--viewTime JiEun">Marked {{formatDatetime(selecteDoubanMovie?.faves.createTime)}}</div>
+            <div class="doulist-content">
+              <div class="doulist-title"><a :href="selecteDoubanMovie?.spec.link" class="cute" target="_blank"
+                                            rel="external nofollow">{{selecteDoubanMovie?.spec.name}}</a></div>
+              <div class="rating"><span class="allstardark"><span class="allstarlight" :style="'width:'+selecteDoubanMovie?.spec.score * 10+'%'"></span></span><span
+                class="rating_nums"> {{selecteDoubanMovie?.spec.score}} </span></div>
+              <div class="abstract">
+                {{selecteDoubanMovie?.faves.remark !=null && selecteDoubanMovie?.faves.remark !='' ? selecteDoubanMovie?.faves.remark : selecteDoubanMovie?.spec.cardSubtitle}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          v-if="src"
+          class="absolute left-0 top-0 hidden h-1/4 w-full cursor-pointer justify-end bg-gradient-to-b from-gray-300 to-transparent p-2 ease-in-out group-hover:flex"
+        >
+          <VButton size="sm" type="secondary" @click="handleResetInit">
+            替换
+          </VButton>
+        </div>
+      </div>
     </div>
   </node-view-wrapper>
 </template>
@@ -207,5 +252,8 @@ const handleCheckAllChange = async () => {
   height: 96px!important;
   border-radius: 4px;
   object-fit: cover
+}
+.editor-link-obtain .v-popper--theme-dropdown {
+  margin-top: -10px;
 }
 </style>  

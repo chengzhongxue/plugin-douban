@@ -11,10 +11,8 @@ import {
 import DoubanView from "./DoubanView.vue";
 import { markRaw } from "vue";
 import { ToolboxItem } from "@halo-dev/richtext-editor";
-import MdiLinkVariant from "~icons/mdi/link-variant";
 import MdiShare from "~icons/mdi/share";
 import BlockActionSeparator from "./BlockActionSeparator.vue";
-import BubbleItemDoubanLink from "./BubbleItemDoubanLink.vue";
 import MdiDeleteForeverOutline from "~icons/mdi/delete-forever-outline?color=red";
 import TablerBrandDouban from '~icons/tabler/brand-douban';
 import { deleteNode } from "../utils/delete-node";
@@ -136,16 +134,6 @@ const Douban = Node.create({
             return isActive(state, Douban.name);
           },
           items: [
-            {
-              priority: 40,
-              props: {
-                icon: markRaw(MdiLinkVariant),
-                title: "修改链接",
-                action: () => {
-                  return markRaw(BubbleItemDoubanLink);
-                },
-              },
-            },
             {
               priority: 50,
               props: {
