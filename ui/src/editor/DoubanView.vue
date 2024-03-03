@@ -103,7 +103,7 @@ const handleResetInit = () => {
         </div>
       </div>
       <div v-else class="group relative">
-        <div @mouseenter="handleSetFocus" class="doulist-item">
+        <div class="doulist-item">
           <div class="doulist-subject">
             <div class="doulist-post"><img decoding="async" referrerpolicy="no-referrer"
                                            :src="selecteDoubanMovie?.spec.poster" class="fade-before fade-after"></div>
