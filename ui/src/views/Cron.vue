@@ -13,7 +13,7 @@ const initialFormState: CronDouban = {
     creationTimestamp: ""
   },
   spec: {
-    cron: "@daily",
+    cron: "0 0 * * * *",
     timezone:"Asia/Shanghai",
     suspend: false,
   },
@@ -39,14 +39,11 @@ const formSchema = ref(
     {
       $cmp: 'FormKit',
       props: {
-        type: 'select',
+        type: 'text',
         name: 'cron',
-        label: '计划',
-        options: [
-          {value: "@monthly", label: '每月（每月 1 号 0 点）'},
-          {value: "@weekly", label: '每周（每周第一天 的 0 点）'},
-          {value: "@daily", label: '每天（每天的 0 点）'},
-        ],
+        label: '定时表达式',
+        validation: 'required',
+        help: '定时任务表达式，请参考：https://moony.la/cron'
       }
     },
     {

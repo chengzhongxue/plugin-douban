@@ -153,7 +153,7 @@ function onKeywordChange() {
 const synchronization = () => {
   Dialog.warning({
     title: "同步豆瓣数据",
-    description: "点击按钮后，后台将进行同步豆瓣数据。",
+    description: "确定要同步豆瓣数据吗，此操作可能会持续较长时间。 ",
     confirmType: "danger",
     confirmText: "确定",
     cancelText: "取消",
@@ -161,7 +161,7 @@ const synchronization = () => {
       try {
         await apiClient.post("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/synchronizationDouban")
           .then((res: any) => {
-            Toast.success("同步豆瓣数据成功");
+            Toast.success("已请求同步豆瓣数据");
           });
       } catch (e) {
         console.error("", e);
