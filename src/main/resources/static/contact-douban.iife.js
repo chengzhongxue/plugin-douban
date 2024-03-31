@@ -1,17 +1,15 @@
 (function () {
-    function getDoubanDetail(src,e) {
-        var url = '/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/getDoubanDetail?url='+src;
-        var data = null;
+    function getDoubanDetail(src, e) {
+        var url = '/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/getDoubanDetail?url=' + src;
         fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    renderer(data,e);
+                    renderer(data, e);
                 })
                 .catch(console.error)
-        return data;
     }
 
-    function renderer(data,e) {
+    function renderer(data, e) {
         let img = data.spec.dataType == 'db' ? `https://dou.img.lithub.cc/${data.spec.type}/${data.spec.id}.jpg` : data.spec.poster
         let date = new Date(data.faves.createTime);
         let dateString = date.toLocaleString(); // 使用默认的日期和时间格式
@@ -26,26 +24,39 @@
                         href="${data.spec.link}">${data.spec.name}</a></div>
                 <div class="rating"><span class="allstardark"><span class="allstarlight" style="width: ${data.spec.score * 10}%;"></span></span><span
                         class="rating_nums">${data.spec.score}</span></div>
-                <div class="abstract">${data.faves?.remark !=null && data.faves?.remark !='' ? data.faves?.remark : data.spec.cardSubtitle}</div>
+                <div class="abstract">${data.faves?.remark != null && data.faves?.remark != '' ? data.faves?.remark : data.spec.cardSubtitle}</div>
             </div>
         </div>`
         e.appendChild(r);
     }
+
     const mf = () => {
-        document.querySelectorAll("douban").forEach(async e => {
-            const src = e.getAttribute("src")
-            if(src!=null && src!=''){
-                getDoubanDetail(src,e);
-            }
-        })
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const e = entry.target;
+                    const src = e.getAttribute("src");
+                    if (src != null && src != '') {
+                        getDoubanDetail(src, e);
+                        observer.unobserve(e); // 停止观察已经加载的元素，防止重复加载
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll("douban").forEach((e) => {
+            observer.observe(e);
+        });
     };
 
     document.addEventListener("DOMContentLoaded", () => {
-        mf()
+        mf();
     }, {
-        once: !0
-    }), document.addEventListener("pjax:success", () => {
-        mf()
+        once: true
+    });
+
+    document.addEventListener("pjax:success", () => {
+        mf();
     });
 
 })();

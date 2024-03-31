@@ -63,7 +63,7 @@ const handleResetInit = () => {
 </script>
 
 <template>
-  <node-view-wrapper as="div" class="inline-block w-full">
+  <node-view-wrapper as="div" class="inline-block-box inline-block">
     <div
       class="inline-block overflow-hidden transition-all text-center relative h-full w-full"
       :class="{
@@ -136,6 +136,10 @@ const handleResetInit = () => {
 
 :root {
   --db--text-color-light: rgba(0, 0, 0, 0.6);
+}
+
+.inline-block-box {
+  width: calc(100% - 1px);
 }
 
 .doulist-item {
