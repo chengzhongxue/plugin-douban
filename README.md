@@ -12,7 +12,7 @@
 * 启用插件之后会在 Console 的左侧添加一个`豆瓣`的菜单项，点击即可进入`豆瓣`管理页面。
 
 ## 📃文档
-https://moony.la/docs/plugin-douban
+https://docs.kunkunyu.com/docs/plugin-douban
 
 ## 开发环境
 
