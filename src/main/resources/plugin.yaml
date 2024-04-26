@@ -4,12 +4,14 @@ metadata:
   name: plugin-douban
 spec:
   enabled: true
-  requires: ">=2.12.0"
+  requires: ">=2.14.0"
   author:
     name: 困困鱼
     website: https://github.com/chengzhongxue
   logo: logo.png
-  homepage: https://github.com/chengzhongxue/plugin-douban
+  homepage: https://www.halo.run/store/apps/app-srBOL
+  repo: https://github.com/chengzhongxue/plugin-douban
+  issues: https://github.com/chengzhongxue/plugin-douban/issues
   settingName: plugin-douban-settings
   configMapName: plugin-douban-configmap
   displayName: "豆瓣"
