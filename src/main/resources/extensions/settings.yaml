@@ -21,7 +21,7 @@ spec:
           name: apiKey
           help: 设置TMDB API Key在https://www.themoviedb.org/settings/api 自行申请
         - $formkit: radio
-          label: 启用代理
+          label: 启用图片代理
           name: isProxy
           id: isProxy
           value: false
