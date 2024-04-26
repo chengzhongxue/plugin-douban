@@ -226,13 +226,28 @@ public class DoubanServiceImpl  implements DoubanService {
 
     @Override
     public Mono<ListResult<DoubanMovie>> listDoubanMovie(DoubanMovieQuery query) {
-        return reactiveClient.listBy(DoubanMovie.class, query.toListOptions(), query.toPageRequest())
-            .flatMap(listResult -> Flux.fromStream(listResult.get())
-                .collectList()
-                .map(list -> new ListResult<>(listResult.getPage(), listResult.getSize(),
-                    listResult.getTotal(), list)
-                )
-            );
+        return this.settingFetcher.get("base").flatMap(base ->
+            reactiveClient.listBy(DoubanMovie.class, query.toListOptions(), query.toPageRequest())
+                .flatMap(listResult -> Flux.fromStream(listResult.get())
+                    .map(doubanMovie -> {
+                        //替换反代图片地址
+                        String poster = doubanMovie.getSpec().getPoster();
+                        boolean isProxy = base.get("isProxy").asBoolean(false);
+
+                        if (doubanMovie.getSpec().getDataType() != "halo" && isProxy) {
+                            if (StringUtils.isNotEmpty(base.get("proxyHost").asText())) {
+                                String proxyHost = base.get("proxyHost").asText();
+                                String replace =
+                                    poster.replaceAll("https://img\\d+.doubanio.com", proxyHost);
+                                doubanMovie.getSpec().setPoster(replace);
+                            }
+                        }
+                        return doubanMovie;
+                    })
+                    .collectList()
+                    .map(list -> new ListResult<>(listResult.getPage(), listResult.getSize(),
+                        listResult.getTotal(), list)
+                    )));
     }
 
     public Mono<DoubanMovieVo> embedHandlerDoubanlist(String type,String id){
@@ -332,14 +347,15 @@ public class DoubanServiceImpl  implements DoubanService {
         listOptions.setFieldSelector(FieldSelector.of(query));
         Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, null);
         Mono<Boolean> booleanMono = list.hasElements();
-       return booleanMono.flatMap(hasValue ->{
-            if (hasValue){
-                return (Mono<DoubanMovieVo>) list.next().flatMap(doubanMovie -> {
-                    return getDoubanMovieVo(doubanMovie);
-                });
-            }else {
+       return this.settingFetcher.get("base").flatMap(base ->booleanMono
+               .flatMap(hasValue ->{
+           if (hasValue){
+               return (Mono<DoubanMovieVo>) list.next().flatMap(doubanMovie -> {
+                   return getDoubanMovieVo(doubanMovie);
+               });
+           }else {
                DoubanMovie doubanMovieDetail = new DoubanMovie();
-              return doubanDetailRequest(type, id).flatMap(jsonNode->{
+               return doubanDetailRequest(type, id).flatMap(jsonNode->{
                    String name = jsonNode.get("title").asText();
                    String poster = jsonNode.get("pic").get("large").asText();
                    String doubanId = jsonNode.get("id").asText();
@@ -383,12 +399,26 @@ public class DoubanServiceImpl  implements DoubanService {
                    doubanMovieDetail.getFaves().setStatus(null);
                    reactiveClient.create(doubanMovieDetail).subscribe();
                    return getDoubanMovieVo(doubanMovieDetail);
-              }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
-                  log.error("Resource not found: ",error.getMessage());
-                  return getDoubanMovieVo(doubanMovieDetail);
-              });
-            }
-        });
+               }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
+                   log.error("Resource not found: ",error.getMessage());
+                   return getDoubanMovieVo(doubanMovieDetail);
+               });
+           }
+       }).map(doubanMovie -> {
+           //替换反代图片地址
+           String poster = doubanMovie.getSpec().getPoster();
+           boolean isProxy = base.get("isProxy").asBoolean(false);
+
+           if (doubanMovie.getSpec().getDataType() != "halo" && isProxy) {
+               if (StringUtils.isNotEmpty(base.get("proxyHost").asText())) {
+                   String proxyHost = base.get("proxyHost").asText();
+                   String replace =
+                       poster.replaceAll("https://img\\d+.doubanio.com", proxyHost);
+                   doubanMovie.getSpec().setPoster(replace);
+               }
+           }
+           return doubanMovie;
+       }));
     }
 
     public Map<String,Object> matcher(String url){
@@ -489,5 +519,7 @@ public class DoubanServiceImpl  implements DoubanService {
             .retrieve()
             .bodyToMono(JsonNode.class);
     }
+
+
 
 }

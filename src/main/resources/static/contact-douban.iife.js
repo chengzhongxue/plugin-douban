@@ -10,7 +10,7 @@
     }
 
     function renderer(data, e) {
-        let img = data.spec.dataType == 'db' ? `https://dou.img.lithub.cc/${data.spec.type}/${data.spec.id}.jpg` : data.spec.poster
+        let img = data.spec.dataType == 'db' ? `${data.spec.poster}` : data.spec.poster
         let date = new Date(data.faves.createTime);
         let dateString = date.toLocaleString(); // 使用默认的日期和时间格式
         const r = document.createElement("div");
