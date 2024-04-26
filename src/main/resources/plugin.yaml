@@ -9,7 +9,9 @@ spec:
     name: 困困鱼
     website: https://github.com/chengzhongxue
   logo: logo.png
-  homepage: https://github.com/chengzhongxue/plugin-douban
+  homepage: https://www.halo.run/store/apps/app-srBOL
+  repo: https://github.com/chengzhongxue/plugin-douban
+  issues: https://github.com/chengzhongxue/plugin-douban/issues
   settingName: plugin-douban-settings
   configMapName: plugin-douban-configmap
   displayName: "豆瓣"
