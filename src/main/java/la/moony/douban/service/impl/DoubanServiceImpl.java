@@ -142,15 +142,17 @@ public class DoubanServiceImpl  implements DoubanService {
                                 if (hasValue) {
                                     list.next()
                                         .flatMap(doubanMovie -> {
-                                            if (doubanMovie.getFaves().getStatus().equals(status1)){
-                                                confition.set(false);
-                                            }else {
-                                                doubanMovie.getFaves().setCreateTime(finalDate.toInstant());
-                                                doubanMovie.getFaves().setRemark(remark);
-                                                doubanMovie.getFaves().setScore(finalScore);
-                                                doubanMovie.getFaves().setStatus(status1);
-                                                reactiveClient.update(doubanMovie).subscribe();
+                                            if(StringUtils.isNotEmpty(doubanMovie.getFaves().getStatus())){
+                                                if (doubanMovie.getFaves().getStatus().equals(status1)){
+                                                    confition.set(false);
+                                                    return Mono.empty();
+                                                }
                                             }
+                                            doubanMovie.getFaves().setCreateTime(finalDate.toInstant());
+                                            doubanMovie.getFaves().setRemark(remark);
+                                            doubanMovie.getFaves().setScore(finalScore);
+                                            doubanMovie.getFaves().setStatus(status1);
+                                            reactiveClient.update(doubanMovie).subscribe();
                                             return Mono.empty();
                                         }).subscribe();
                                 } else {
