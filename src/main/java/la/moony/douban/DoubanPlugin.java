@@ -4,6 +4,7 @@ import la.moony.douban.extension.CronDouban;
 import la.moony.douban.extension.DoubanMovie;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Component;
+import run.halo.app.extension.Scheme;
 import run.halo.app.extension.SchemeManager;
 import run.halo.app.extension.index.IndexSpec;
 import run.halo.app.plugin.BasePlugin;
@@ -90,7 +91,7 @@ public class DoubanPlugin extends BasePlugin {
 
     @Override
     public void stop() {
-        schemeManager.unregister(schemeManager.get(DoubanMovie.class));
-        schemeManager.unregister(schemeManager.get(CronDouban.class));
+        schemeManager.unregister(Scheme.buildFromType(DoubanMovie.class));
+        schemeManager.unregister(Scheme.buildFromType(CronDouban.class));
     }
 }
