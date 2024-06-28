@@ -5,7 +5,7 @@ import type {CronDouban, CronDoubanList} from "@/types";
 import cloneDeep from "lodash.clonedeep";
 import apiClient from "@/utils/api-client";
 
-const Se = "cron-default"
+const Se = "cron-douban-default"
 
 const initialFormState: CronDouban = {
   metadata: {
