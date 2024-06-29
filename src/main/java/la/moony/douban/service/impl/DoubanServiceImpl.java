@@ -131,7 +131,7 @@ public class DoubanServiceImpl  implements DoubanService {
                             var listOptions = new ListOptions();
                             var query = and(equal("spec.type", type1),equal("spec.id", id));
                             listOptions.setFieldSelector(FieldSelector.of(query));
-                            Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, null);
+                            Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, Sort.by("faves.createTime"));
                             Mono<Boolean> booleanMono = list.hasElements();
                             Date finalDate = date;
                             String finalScore = score;
@@ -140,21 +140,19 @@ public class DoubanServiceImpl  implements DoubanService {
                             Date finalDate1 = date;
                             booleanMono.flatMap(hasValue -> {
                                 if (hasValue) {
-                                    list.next()
-                                        .flatMap(doubanMovie -> {
-                                            if(StringUtils.isNotEmpty(doubanMovie.getFaves().getStatus())){
-                                                if (doubanMovie.getFaves().getStatus().equals(status1)){
-                                                    confition.set(false);
-                                                    return Mono.empty();
-                                                }
+                                    return list.next().flatMap(doubanMovie -> {
+                                        if (StringUtils.isNotEmpty(doubanMovie.getFaves().getStatus())) {
+                                            if (doubanMovie.getFaves().getStatus().equals(status1)) {
+                                                confition.set(false);
+                                                return Mono.empty();
                                             }
-                                            doubanMovie.getFaves().setCreateTime(finalDate.toInstant());
-                                            doubanMovie.getFaves().setRemark(remark);
-                                            doubanMovie.getFaves().setScore(finalScore);
-                                            doubanMovie.getFaves().setStatus(status1);
-                                            reactiveClient.update(doubanMovie).subscribe();
-                                            return Mono.empty();
-                                        }).subscribe();
+                                        }
+                                        doubanMovie.getFaves().setCreateTime(finalDate.toInstant());
+                                        doubanMovie.getFaves().setRemark(remark);
+                                        doubanMovie.getFaves().setScore(finalScore);
+                                        doubanMovie.getFaves().setStatus(status1);
+                                        return reactiveClient.update(doubanMovie);
+                                    });
                                 } else {
                                     DoubanMovie doubanMovie = new DoubanMovie();
                                     doubanMovie.setMetadata(new Metadata());
@@ -176,9 +174,8 @@ public class DoubanServiceImpl  implements DoubanService {
                                     doubanMovie.getFaves().setRemark(remark);
                                     doubanMovie.getFaves().setScore(score);
                                     doubanMovie.getFaves().setStatus(status1);
-                                    reactiveClient.create(doubanMovie).subscribe();
+                                    return reactiveClient.create(doubanMovie);
                                 }
-                                return Mono.empty();
                             }).subscribe();
                         }
                         i.set(i.get()+1);
@@ -290,7 +287,7 @@ public class DoubanServiceImpl  implements DoubanService {
         var listOptions = new ListOptions();
         var query = and(equal("spec.type", type),equal("spec.id", id),equal("spec.dataType", "tmdb"));
         listOptions.setFieldSelector(FieldSelector.of(query));
-        Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, null);
+        Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, Sort.by("faves.createTime"));
         Mono<Boolean> booleanMono = list.hasElements();
         return booleanMono.flatMap(hasValue ->{
             if (hasValue){
@@ -347,7 +344,7 @@ public class DoubanServiceImpl  implements DoubanService {
         var listOptions = new ListOptions();
         var query = and(equal("spec.type", type),equal("spec.id", id));
         listOptions.setFieldSelector(FieldSelector.of(query));
-        Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, null);
+        Flux<DoubanMovie> list = reactiveClient.listAll(DoubanMovie.class, listOptions, Sort.by("faves.createTime"));
         Mono<Boolean> booleanMono = list.hasElements();
        return this.settingFetcher.get("base").flatMap(base ->booleanMono
                .flatMap(hasValue ->{
