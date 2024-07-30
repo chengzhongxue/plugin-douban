@@ -4,7 +4,7 @@ metadata:
   name: plugin-douban
 spec:
   enabled: true
-  requires: ">=2.15.0"
+  requires: ">=2.17.0"
   author:
     name: 困困鱼
     website: https://github.com/chengzhongxue

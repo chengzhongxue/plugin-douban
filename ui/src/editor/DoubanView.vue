@@ -3,7 +3,7 @@ import type { PMNode } from "@halo-dev/richtext-editor";
 import type { Editor, Node } from "@halo-dev/richtext-editor";
 import { NodeViewWrapper } from "@halo-dev/richtext-editor";
 import { computed, onMounted, ref } from "vue";
-import apiClient from "@/utils/api-client";
+import { axiosInstance } from "@halo-dev/api-client";
 import type {DoubanMovie} from "@/types";
 import {formatDatetime} from "@/utils/date";
 import { VButton,VSpace,VDropdown} from "@halo-dev/components";
@@ -42,7 +42,7 @@ onMounted(() => {
 });
 
 const handleCheckAllChange = async () => {
-  const { data: data } = await apiClient.get<DoubanMovie>(
+  const { data: data } = await axiosInstance.get<DoubanMovie>(
     `/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/getDoubanDetail?url=${src.value}`);
   selecteDoubanMovie.value = data
 };

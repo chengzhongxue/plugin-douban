@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
+import run.halo.app.core.extension.endpoint.SortResolver;
 import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.PageRequest;
 import run.halo.app.extension.PageRequestImpl;
@@ -105,12 +106,13 @@ public class DoubanMovieQuery extends SortableRequest {
     }
 
 
+    public Sort getSort() {
+        var sort = SortResolver.defaultInstance.resolve(exchange);
+        return sort.and(Sort.by("faves.createTime").descending());
+    }
+
     public PageRequest toPageRequest() {
-        var sort = getSort();
-        if (sort.isUnsorted()) {
-            sort = Sort.by("faves.createTime").descending();
-        }
-        return PageRequestImpl.of(getPage(), getSize(), sort);
+        return PageRequestImpl.of(getPage(), getSize(), getSort());
     }
 
 

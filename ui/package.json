@@ -11,8 +11,8 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "@halo-dev/components": "^1.10.0",
-    "@halo-dev/console-shared": "^2.12.0",
+    "@halo-dev/components": "^2.17.0",
+    "@halo-dev/console-shared": "^2.17.0",
     "canvas-confetti": "^1.9.2",
     "vue": "^3.3.12",
     "axios": "^1.6.1",
@@ -24,8 +24,8 @@
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
-    "@halo-dev/richtext-editor": "^2.12.0",
-    "@halo-dev/ui-plugin-bundler-kit": "^2.12.0",
+    "@halo-dev/richtext-editor": "^2.17.0",
+    "@halo-dev/ui-plugin-bundler-kit": "^2.17.0",
     "@iconify/json": "^2.2.159",
     "@rushstack/eslint-patch": "^1.6.1",
     "@types/canvas-confetti": "^1.6.4",

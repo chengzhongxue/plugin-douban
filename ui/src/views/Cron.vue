@@ -3,7 +3,7 @@ import {VButton,VCard,VPageHeader} from "@halo-dev/components";
 import {computed, onMounted, ref} from "vue";
 import type {CronDouban, CronDoubanList} from "@/types";
 import cloneDeep from "lodash.clonedeep";
-import apiClient from "@/utils/api-client";
+import { axiosInstance } from "@halo-dev/api-client";
 
 const Se = "cron-douban-default"
 
@@ -66,18 +66,18 @@ const mutate = async () => {
     if (isUpdateMode.value) {
       const {
         data: data
-      } = await apiClient.get(`/apis/douban.moony.la/v1alpha1/crondoubans/${Se}`);
+      } = await axiosInstance.get(`/apis/douban.moony.la/v1alpha1/crondoubans/${Se}`);
       return formState.value = {
         ...formState.value,
         status: data.status,
         metadata: data.metadata
       },
-        await apiClient.put<CronDouban>(
+        await axiosInstance.put<CronDouban>(
           `/apis/douban.moony.la/v1alpha1/crondoubans/${Se}`,
           formState.value
         );
     } else {
-      await apiClient.post<CronDouban>(
+      await axiosInstance.post<CronDouban>(
         `/apis/douban.moony.la/v1alpha1/crondoubans`,
         formState.value
       );
@@ -89,7 +89,7 @@ const mutate = async () => {
 
 onMounted(async () => {
 
-  const {data: data} = await apiClient.get<CronDoubanList>(`/apis/douban.moony.la/v1alpha1/crondoubans`);
+  const {data: data} = await axiosInstance.get<CronDoubanList>(`/apis/douban.moony.la/v1alpha1/crondoubans`);
   let items = data.items;
   if (items?.length){
     formState.value = items[0]

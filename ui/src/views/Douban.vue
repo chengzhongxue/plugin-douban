@@ -15,7 +15,7 @@ import {
   IconCloseCircle} from "@halo-dev/components";
 import {useQuery, useQueryClient} from "@tanstack/vue-query";
 import {computed, ref, watch} from "vue";
-import apiClient from "@/utils/api-client";
+import { axiosInstance } from "@halo-dev/api-client";
 import {formatDatetime} from "@/utils/date";
 import type {DoubanMovie, FriendDoubanMovieList} from "@/types";
 import {useRouteQuery} from "@vueuse/router";
@@ -78,7 +78,7 @@ const {
   queryKey: ["doubanMovies", page, size,selectedSort,selectedDataType,selectedStatus,selectedType,keyword],
   queryFn: async () => {
     
-    const { data } = await apiClient.get<FriendDoubanMovieList>(
+    const { data } = await axiosInstance.get<FriendDoubanMovieList>(
       "/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/doubanmovies",
       {
         params: {
@@ -125,7 +125,7 @@ const handleDeleteInBatch = () => {
     onConfirm: async () => {
       try {
         const promises = selecteDoubanMovies.value.map((doubanMovie) => {
-          return apiClient.delete(`/apis/douban.moony.la/v1alpha1/doubanmovies/${doubanMovie}`);
+          return axiosInstance.delete(`/apis/douban.moony.la/v1alpha1/doubanmovies/${doubanMovie}`);
         });
         if (promises) {
           await Promise.all(promises);
@@ -159,7 +159,7 @@ const synchronization = () => {
     cancelText: "取消",
     onConfirm: async () => {
       try {
-        await apiClient.post("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/synchronizationDouban")
+        await axiosInstance.post("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/synchronizationDouban")
           .then((res: any) => {
             Toast.success("已请求同步豆瓣数据");
           });
@@ -186,7 +186,7 @@ function handleClear() {
     description: "确定要清空所有推送记录吗？此操作不可恢复。",
     async onConfirm() {
       try {
-        await apiClient.delete("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/clear")
+        await axiosInstance.delete("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/clear")
           .then((res: any) => {
             Toast.success("清空成功");
           });

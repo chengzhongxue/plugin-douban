@@ -2,7 +2,7 @@
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { ref, computed, nextTick, watch} from "vue";
 import type { DoubanMovie } from "@/types";
-import apiClient from "@/utils/api-client";
+import { axiosInstance } from "@halo-dev/api-client";
 import cloneDeep from "lodash.clonedeep";
 import {toDatetimeLocal, toISOString} from "@/utils/date";
 
@@ -122,12 +122,12 @@ const handleSaveFriend = async () => {
   try {
     saving.value = true;
     if (isUpdateMode.value) {
-      await apiClient.put<DoubanMovie>(
+      await axiosInstance.put<DoubanMovie>(
         `/apis/douban.moony.la/v1alpha1/doubanmovies/${formState.value.metadata.name}`,
         formState.value
       );
     } else {
-      await apiClient.post<DoubanMovie>(
+      await axiosInstance.post<DoubanMovie>(
         `/apis/douban.moony.la/v1alpha1/doubanmovies`,
         formState.value
       );
