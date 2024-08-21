@@ -245,7 +245,9 @@ const onEditingModalClose = async () => {
       <template #header>
         <div class="block w-full bg-gray-50 px-4 py-3">
           <div class="relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center" >
-            <div class="hidden items-center sm:flex" >
+            <div
+              v-permission="['plugin:douban:manage']"
+              class="hidden items-center sm:flex" >
               <input
                 v-model="checkedAll"
                 type="checkbox"
@@ -410,7 +412,8 @@ const onEditingModalClose = async () => {
           <table class="w-full  text-sm text-left text-gray-500 widefat ">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center"> </div></th>
+              <th v-permission="['plugin:douban:manage']" 
+                  scope="col" class="px-4 py-3"><div class="w-max flex items-center"> </div></th>
               <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">标题 </div></th>
               <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">封面 </div></th>
               <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">来源 </div></th>
@@ -420,12 +423,13 @@ const onEditingModalClose = async () => {
               <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">状态 </div></th>
               <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">我的短评 </div></th>
               <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">我的评分 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center"> </div></th>
+              <th v-permission="['plugin:douban:manage']" 
+                  scope="col" class="px-4 py-3"><div class="w-max flex items-center"> </div></th>
             </tr>
             </thead>
             <tbody>
             <tr v-for="doubanMovie in doubanMovies" class="border-b last:border-none hover:bg-gray-100">
-              <td class="px-4 py-4 ">
+              <td class="px-4 py-4 " v-permission="['plugin:douban:manage']">
                 <input
                   v-model="selecteDoubanMovies"
                   :value="doubanMovie.metadata.name"
@@ -445,8 +449,8 @@ const onEditingModalClose = async () => {
               <td class="px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status)}}</td>
               <td class="px-4 py-4">{{doubanMovie.faves.remark}}</td>
               <td class="px-4 py-4">{{doubanMovie.faves.score}}</td>
-              <td class="px-4 py-4 table-td">
-                <VDropdownItem v-permission="['plugin:douban:manage']" @click="handleOpenCreateModal(doubanMovie)">
+              <td class="px-4 py-4 table-td" v-permission="['plugin:douban:manage']">
+                <VDropdownItem  @click="handleOpenCreateModal(doubanMovie)">
                   编辑
                 </VDropdownItem>
               </td>
