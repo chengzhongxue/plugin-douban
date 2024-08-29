@@ -330,8 +330,9 @@ public class DoubanServiceImpl  implements DoubanService {
                     doubanMovieDetail.getFaves().setRemark(null);
                     doubanMovieDetail.getFaves().setScore(null);
                     doubanMovieDetail.getFaves().setStatus(null);
-                    reactiveClient.create(doubanMovieDetail).subscribe();
-                    return getDoubanMovieVo(doubanMovieDetail);
+                    return reactiveClient.create(doubanMovieDetail)
+                        .thenReturn(doubanMovieDetail)
+                        .flatMap(doubanMovie -> getDoubanMovieVo(doubanMovie));
                 }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
                     log.error("Resource not found: ",error.getMessage());
                     return getDoubanMovieVo(doubanMovieDetail);
@@ -396,8 +397,9 @@ public class DoubanServiceImpl  implements DoubanService {
                    doubanMovieDetail.getFaves().setRemark(null);
                    doubanMovieDetail.getFaves().setScore(null);
                    doubanMovieDetail.getFaves().setStatus(null);
-                   reactiveClient.create(doubanMovieDetail).subscribe();
-                   return getDoubanMovieVo(doubanMovieDetail);
+                   return reactiveClient.create(doubanMovieDetail)
+                       .thenReturn(doubanMovieDetail)
+                       .flatMap(doubanMovie -> getDoubanMovieVo(doubanMovie));
                }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
                    log.error("Resource not found: ",error.getMessage());
                    return getDoubanMovieVo(doubanMovieDetail);

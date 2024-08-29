@@ -3,10 +3,11 @@ import type { PMNode } from "@halo-dev/richtext-editor";
 import type { Editor, Node } from "@halo-dev/richtext-editor";
 import { NodeViewWrapper } from "@halo-dev/richtext-editor";
 import { computed, onMounted, ref } from "vue";
-import { axiosInstance } from "@halo-dev/api-client";
-import type {DoubanMovie} from "@/types";
 import {formatDatetime} from "@/utils/date";
 import { VButton,VSpace,VDropdown} from "@halo-dev/components";
+import {doubanApiClient} from "@/api";
+import type { DoubanMovie } from "@/api/generated";
+
 const selecteDoubanMovie = ref<DoubanMovie | undefined>();
 
 const props = defineProps<{
@@ -42,8 +43,9 @@ onMounted(() => {
 });
 
 const handleCheckAllChange = async () => {
-  const { data: data } = await axiosInstance.get<DoubanMovie>(
-    `/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/getDoubanDetail?url=${src.value}`);
+  const { data: data } = await doubanApiClient.doubanMovie.getDoubanDetail({
+    url: src.value
+  });
   selecteDoubanMovie.value = data
 };
 
@@ -204,7 +206,8 @@ const handleResetInit = () => {
 
 .doulist-item .doulist-subject .doulist-title {
   margin-bottom: 5px;
-  font-size: 18px
+  font-size: 18px;
+  display: flex;
 }
 
 .doulist-item .doulist-subject .doulist-title a {
@@ -248,7 +251,8 @@ const handleResetInit = () => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.6;
-  max-height: 3.2em
+  max-height: 3.2em;
+  display: flex;
 }
 
 .doulist-item .doulist-subject img {

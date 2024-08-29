@@ -1,35 +1,34 @@
 package la.moony.douban;
 
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import la.moony.douban.extension.DoubanMovie;
 import org.apache.commons.lang3.StringUtils;
+import org.springdoc.core.fn.builders.operation.Builder;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import run.halo.app.core.extension.endpoint.SortResolver;
 import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.PageRequest;
 import run.halo.app.extension.PageRequestImpl;
+import run.halo.app.extension.router.IListRequest;
 import run.halo.app.extension.router.SortableRequest;
-import run.halo.app.extension.router.selector.FieldSelector;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+
 import static java.util.Comparator.comparing;
-import static run.halo.app.extension.index.query.QueryFactory.all;
-import static run.halo.app.extension.index.query.QueryFactory.and;
+import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 import static run.halo.app.extension.index.query.QueryFactory.contains;
 import static run.halo.app.extension.index.query.QueryFactory.equal;
-import static run.halo.app.extension.router.selector.SelectorUtil.labelAndFieldSelectorToListOptions;
+import static run.halo.app.extension.router.QueryParamBuildUtil.sortParameter;
 
 public class DoubanMovieQuery extends SortableRequest {
 
-    private final MultiValueMap<String, String> queryParams;
 
-
-    public DoubanMovieQuery(ServerWebExchange exchange) {
-        super(exchange);
-        this.queryParams = exchange.getRequest().getQueryParams();
+    public DoubanMovieQuery(ServerRequest request) {
+        super(request.exchange());
     }
 
     @Nullable
@@ -52,37 +51,37 @@ public class DoubanMovieQuery extends SortableRequest {
         return queryParams.getFirst("dataType");
     }
 
+    @Nullable
     public String getGenre() {
         return StringUtils.defaultIfBlank(queryParams.getFirst("genre"), null);
     }
 
     public ListOptions toListOptions() {
-        var listOptions =
-            labelAndFieldSelectorToListOptions(getLabelSelector(), getFieldSelector());
-        var query = all();
-        if (StringUtils.isNotBlank(getStatus())) {
-            query = and(query, equal("faves.status", getStatus()));
-        }
-        if (StringUtils.isNotBlank(getType())) {
-            query = and(query, equal("spec.type", getType()));
-        }
-        if (StringUtils.isNotBlank(getDataType())) {
-            query = and(query, equal("spec.dataType", getDataType()));
-        }
+        var builder = ListOptions.builder(super.toListOptions());
 
-        if (StringUtils.isNotBlank(getGenre())) {
-            query = and(query, equal("spec.genres", getGenre()));
-        }
+        Optional.ofNullable(getKeyword())
+            .filter(StringUtils::isNotBlank)
+            .ifPresent(keyword -> builder.andQuery(
+                contains("spec.name", getKeyword()))
+            );
 
-        if (listOptions.getFieldSelector() != null
-            && listOptions.getFieldSelector().query() != null) {
-            query = and(query, listOptions.getFieldSelector().query());
-        }
-        if (StringUtils.isNotBlank(getKeyword())) {
-            query = and(query, contains("spec.name", getKeyword()));
-        }
-        listOptions.setFieldSelector(FieldSelector.of(query));
-        return listOptions;
+        Optional.ofNullable(getStatus())
+            .filter(StringUtils::isNotBlank)
+            .ifPresent(status -> builder.andQuery(equal("faves.status", status)));
+
+        Optional.ofNullable(getType())
+            .filter(StringUtils::isNotBlank)
+            .ifPresent(type -> builder.andQuery(equal("spec.type", type)));
+
+        Optional.ofNullable(getDataType())
+            .filter(StringUtils::isNotBlank)
+            .ifPresent(dataType -> builder.andQuery(equal("spec.dataType", dataType)));
+
+        Optional.ofNullable(getGenre())
+            .filter(StringUtils::isNotBlank)
+            .ifPresent(genres -> builder.andQuery(equal("spec.genres", genres)));
+
+        return builder.build();
     }
 
     public Comparator<DoubanMovie> toComparator() {
@@ -113,6 +112,43 @@ public class DoubanMovieQuery extends SortableRequest {
 
     public PageRequest toPageRequest() {
         return PageRequestImpl.of(getPage(), getSize(), getSort());
+    }
+
+    public static void buildParameters(Builder builder) {
+        IListRequest.buildParameters(builder);
+        builder.parameter(sortParameter())
+            .parameter(parameterBuilder()
+                .in(ParameterIn.QUERY)
+                .name("keyword")
+                .description("DoubanMovies filtered by keyword.")
+                .implementation(String.class)
+                .required(false))
+            .parameter(parameterBuilder()
+                .in(ParameterIn.QUERY)
+                .name("status")
+                .description("DoubanMovies filtered by status.")
+                .implementation(String.class)
+                .required(false))
+            .parameter(parameterBuilder()
+                .in(ParameterIn.QUERY)
+                .name("type")
+                .description("DoubanMovies filtered by type.")
+                .implementation(String.class)
+                .required(false))
+            .parameter(parameterBuilder()
+                .in(ParameterIn.QUERY)
+                .name("dataType")
+                .description("DoubanMovies filtered by dataType.")
+                .implementation(String.class)
+                .required(false))
+            .parameter(parameterBuilder()
+                .in(ParameterIn.QUERY)
+                .name("genres")
+                .description("DoubanMovies filtered by genres.")
+                .implementation(String.class)
+                .required(false))
+
+        ;
     }
 
 

@@ -1,7 +1,9 @@
 package la.moony.douban;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import la.moony.douban.extension.DoubanMovie;
 import la.moony.douban.service.DoubanService;
+import la.moony.douban.vo.DoubanMovieVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.stereotype.Component;
@@ -11,8 +13,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
-import run.halo.app.extension.ReactiveExtensionClient;
-import run.halo.app.extension.router.QueryParamBuildUtil;
+import run.halo.app.extension.ListResult;
 
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
@@ -20,28 +21,29 @@ import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 @Component
 public class DoubanEndpoint implements CustomEndpoint {
 
-    private final String doubanMovieTag = "api.plugin.halo.run/v1alpha1/DoubanMovie";
-
-    private final ReactiveExtensionClient client;
+    private final String doubanMovieTag = "api.douban.moony.la/v1alpha1/DoubanMovie";
 
     private final DoubanService doubanService;
 
 
-    public DoubanEndpoint(ReactiveExtensionClient client, DoubanService doubanService) {
-        this.client = client;
+    public DoubanEndpoint(DoubanService doubanService) {
         this.doubanService = doubanService;
     }
 
     @Override
     public RouterFunction<ServerResponse> endpoint() {
         return SpringdocRouteBuilder.route()
-            .GET("plugins/plugin-douban/doubanmovies", this::listDoubanmovie, builder -> {
+            .GET("doubanmovies", this::listDoubanmovie, builder -> {
                 builder.operationId("listDoubanMovie")
                     .description("List doubanMovie.")
-                    .tag(doubanMovieTag);
-                QueryParamBuildUtil.buildParametersFromType(builder, DoubanMovieQuery.class);
+                    .tag(doubanMovieTag)
+                    .response(
+                        responseBuilder()
+                            .implementation(ListResult.generateGenericClass(DoubanMovie.class))
+                    );
+                DoubanMovieQuery.buildParameters(builder);
             })
-            .GET("plugins/plugin-douban/genres", this::ListGenres,
+            .GET("doubanmovies/-/genres", this::ListGenres,
                 builder -> builder.operationId("ListGenres")
                     .description("List all douban genres.")
                     .tag(doubanMovieTag)
@@ -55,11 +57,25 @@ public class DoubanEndpoint implements CustomEndpoint {
                     .response(responseBuilder()
                         .implementationArray(String.class)
                     ))
+            .GET("doubanmovies/-/getDoubanDetail", this::getDoubanDetail,
+                builder -> builder.operationId("getDoubanDetail")
+                    .description("getDoubanDetail.")
+                    .tag(doubanMovieTag)
+                    .parameter(parameterBuilder()
+                        .name("url")
+                        .in(ParameterIn.QUERY)
+                        .description("doubanmovie url to query")
+                        .required(false)
+                        .implementation(String.class)
+                    )
+                    .response(responseBuilder()
+                        .implementationArray(DoubanMovieVo.class)
+                    ))
             .build();
     }
 
     Mono<ServerResponse> listDoubanmovie(ServerRequest request) {
-        DoubanMovieQuery query = new DoubanMovieQuery(request.exchange());
+        DoubanMovieQuery query = new DoubanMovieQuery(request);
         return doubanService.listDoubanMovie(query)
             .flatMap(doubanMovies -> ServerResponse.ok().bodyValue(doubanMovies));
     }
@@ -73,8 +89,15 @@ public class DoubanEndpoint implements CustomEndpoint {
             .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
 
+    private Mono<ServerResponse> getDoubanDetail(ServerRequest request) {
+        String url = request.queryParam("url").orElse(null);
+        return doubanService.getDoubanDetail(url)
+            .flatMap(result -> ServerResponse.ok().bodyValue(result));
+    }
+
+
     @Override
     public GroupVersion groupVersion() {
-        return GroupVersion.parseAPIVersion("api.plugin.halo.run/v1alpha1");
+        return GroupVersion.parseAPIVersion("api.douban.moony.la/v1alpha1");
     }
 }

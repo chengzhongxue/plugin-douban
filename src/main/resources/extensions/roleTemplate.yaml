@@ -1,6 +1,23 @@
 apiVersion: v1alpha1
 kind: Role
 metadata:
+  name: role-template-douban-anonymous
+  labels:
+    rbac.authorization.halo.run/aggregate-to-anonymous: "true"
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+  annotations:
+    rbac.authorization.halo.run/display-name: "查看朋友圈提交模板"
+rules:
+  - apiGroups: [ "api.douban.moony.la" ]
+    resources: [ "doubanmovies","doubanmovies/genres","doubanmovies/getDoubanDetail"]
+    verbs: [ "get", "list" ]
+
+---
+
+apiVersion: v1alpha1
+kind: Role
+metadata:
   name: role-template-douban-view
   labels:
     halo.run/role-template: "true"

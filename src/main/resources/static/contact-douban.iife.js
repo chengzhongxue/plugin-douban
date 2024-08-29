@@ -1,6 +1,6 @@
 (function () {
     function getDoubanDetail(src, e) {
-        var url = '/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/getDoubanDetail?url=' + src;
+        var url = '/apis/api.douban.moony.la/v1alpha1/doubanmovies/-/getDoubanDetail?url=' + src;
         fetch(url)
                 .then(response => response.json())
                 .then(data => {

@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { ref, computed, nextTick, watch} from "vue";
-import type { DoubanMovie } from "@/types";
-import { axiosInstance } from "@halo-dev/api-client";
 import cloneDeep from "lodash.clonedeep";
-import {toDatetimeLocal, toISOString} from "@/utils/date";
+import {doubanCoreApiClient} from "@/api";
+import type { DoubanMovie } from "@/api/generated";
 
 const props = withDefaults(
   defineProps<{
@@ -37,7 +36,7 @@ const initialFormState: DoubanMovie = {
     name: "",
     poster: "",
     link: "",
-    id: null,
+    id: "",
     score: "",
     year: "",
     type: "",
@@ -93,8 +92,6 @@ watch(
   (doubanMovie) => {
     if (doubanMovie) {
       formState.value = cloneDeep(doubanMovie);
-      formState.value.faves.createTime = formState.value.faves.createTime 
-        ? toDatetimeLocal(formState.value.faves.createTime) : undefined
     }
   }
 );
@@ -115,22 +112,19 @@ const handleSaveFriend = async () => {
     ...annotations,
     ...customAnnotations,
   };
-
-  formState.value.faves.createTime = formState.value.faves.createTime 
-    ? toISOString(formState.value.faves.createTime) : undefined
-
+  
   try {
     saving.value = true;
     if (isUpdateMode.value) {
-      await axiosInstance.put<DoubanMovie>(
-        `/apis/douban.moony.la/v1alpha1/doubanmovies/${formState.value.metadata.name}`,
-        formState.value
-      );
+      await doubanCoreApiClient.doubanMovie.updateDoubanMovie({
+          name: formState.value.metadata.name,
+          doubanMovie: formState.value
+      });
     } else {
-      await axiosInstance.post<DoubanMovie>(
-        `/apis/douban.moony.la/v1alpha1/doubanmovies`,
-        formState.value
-      );
+      await doubanCoreApiClient.doubanMovie.createDoubanMovie(
+        {
+          doubanMovie: formState.value
+        });
     }
 
     Toast.success("保存成功");

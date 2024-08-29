@@ -17,9 +17,11 @@ import {useQuery, useQueryClient} from "@tanstack/vue-query";
 import {computed, ref, watch} from "vue";
 import { axiosInstance } from "@halo-dev/api-client";
 import {formatDatetime} from "@/utils/date";
-import type {DoubanMovie, FriendDoubanMovieList} from "@/types";
+
 import {useRouteQuery} from "@vueuse/router";
 import DoubanMovieEditingModal from "../components/DoubanMovieEditingModal.vue";
+import { doubanApiClient, doubanCoreApiClient } from "@/api";
+import type { DoubanMovie } from "@/api/generated";
 
 const queryClient = useQueryClient();
 
@@ -78,18 +80,15 @@ const {
   queryKey: ["doubanMovies", page, size,selectedSort,selectedDataType,selectedStatus,selectedType,keyword],
   queryFn: async () => {
     
-    const { data } = await axiosInstance.get<FriendDoubanMovieList>(
-      "/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/doubanmovies",
+    const { data } = await doubanApiClient.doubanMovie.listDoubanMovie(
       {
-        params: {
-          page: page.value,
-          size: size.value,
-          sort: selectedSort.value,
-          dataType: selectedDataType.value,
-          status: selectedStatus.value,
-          type : selectedType.value,
-          keyword: keyword?.value
-        },
+        page: page.value,
+        size: size.value,
+        sort: [selectedSort.value].filter(Boolean) as string[],
+        dataType: selectedDataType.value,
+        status: selectedStatus.value,
+        type : selectedType.value,
+        keyword: keyword?.value
       }
     );
     total.value = data.total;
@@ -125,7 +124,11 @@ const handleDeleteInBatch = () => {
     onConfirm: async () => {
       try {
         const promises = selecteDoubanMovies.value.map((doubanMovie) => {
-          return axiosInstance.delete(`/apis/douban.moony.la/v1alpha1/doubanmovies/${doubanMovie}`);
+          return doubanCoreApiClient.doubanMovie.deleteDoubanMovie(
+            {
+              name: doubanMovie
+            }
+          );
         });
         if (promises) {
           await Promise.all(promises);

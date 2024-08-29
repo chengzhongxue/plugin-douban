@@ -1,8 +1,8 @@
 plugins {
     id 'java'
-    id "com.github.node-gradle.node" version "5.0.0"
+    id "com.github.node-gradle.node" version "7.0.2"
     id "io.freefair.lombok" version "8.0.1"
-    id "run.halo.plugin.devtools" version "0.0.7"
+    id "run.halo.plugin.devtools" version "0.1.1"
 }
 
 group 'run.halo.starter'
@@ -45,5 +45,31 @@ build {
 }
 
 halo {
-    version = '2.17'
+    version = '2.17.0'
 }
+
+haloPlugin {
+    openApi {
+        outputDir = file("$rootDir/api-docs/openapi/v3_0")
+        // 用于定义 API 分组规则
+        groupingRules {
+            // 此名称为 group name，定义后 groupedApiMappings 中的 /v3/api-docs/ 后的名称需要与之相同，要避免与 halo 中已经存在的 group 相同避免生成后出现与插件无关的 API
+            doubanApi {
+                // 分组显示名称
+                displayName = 'Extension API for Douban'
+                // 分组的 API 规则
+                pathsToMatch = ['/apis/douban.moony.la/v1alpha1/**',
+                                '/apis/api.douban.moony.la/v1alpha1/**'
+                ]
+            }
+        }
+        groupedApiMappings = [
+                '/v3/api-docs/doubanApi': 'doubanApi.json'
+        ]
+        generator {
+            // 默认配置可缺省
+            outputDir = file("${projectDir}/ui/src/api/generated")
+        }
+    }
+}
+
