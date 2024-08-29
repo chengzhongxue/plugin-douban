@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="https://www.thymeleaf.org">
+<html lang="zh-CN" xmlns:th="https://www.thymeleaf.org" th:with="version = '1.2.1'">
 
 <head>
     <title th:text="${title}"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" id="wpd-css-css" th:href="@{/plugins/plugin-douban/assets/static/db.min.css?v='1.2.1'}" type="text/css"
+    <link rel="stylesheet" id="wpd-css-css" th:href="@{/plugins/plugin-douban/assets/static/db.min.css?v={version}(version=${version})}" type="text/css"
           media="screen">
     <style>
         h1,
@@ -83,7 +83,7 @@
 
 </main>
 <footer class="site--footer">
-    <script  th:src="@{/plugins/plugin-douban/assets/static/db.min.js?v='1.2.1'}"></script>
+    <script  th:src="@{/plugins/plugin-douban/assets/static/db.min.js?v={version}(version=${version})}"></script>
 </footer>
 
 </body>
