@@ -218,7 +218,7 @@ export const ApiDoubanMoonyLaV1alpha1DoubanMovieApiFp = function(configuration?:
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getDoubanDetail(url?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<DoubanMovieVo>>> {
+        async getDoubanDetail(url?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DoubanMovieVo>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getDoubanDetail(url, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ApiDoubanMoonyLaV1alpha1DoubanMovieApi.getDoubanDetail']?.[localVarOperationServerIndex]?.url;
@@ -251,7 +251,7 @@ export const ApiDoubanMoonyLaV1alpha1DoubanMovieApiFp = function(configuration?:
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listGenres(name?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<string>>> {
+        async listGenres(name?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listGenres(name, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ApiDoubanMoonyLaV1alpha1DoubanMovieApi.listGenres']?.[localVarOperationServerIndex]?.url;
@@ -273,7 +273,7 @@ export const ApiDoubanMoonyLaV1alpha1DoubanMovieApiFactory = function (configura
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getDoubanDetail(requestParameters: ApiDoubanMoonyLaV1alpha1DoubanMovieApiGetDoubanDetailRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<Array<DoubanMovieVo>> {
+        getDoubanDetail(requestParameters: ApiDoubanMoonyLaV1alpha1DoubanMovieApiGetDoubanDetailRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<DoubanMovieVo> {
             return localVarFp.getDoubanDetail(requestParameters.url, options).then((request) => request(axios, basePath));
         },
         /**
@@ -291,7 +291,7 @@ export const ApiDoubanMoonyLaV1alpha1DoubanMovieApiFactory = function (configura
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listGenres(requestParameters: ApiDoubanMoonyLaV1alpha1DoubanMovieApiListGenresRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<Array<string>> {
+        listGenres(requestParameters: ApiDoubanMoonyLaV1alpha1DoubanMovieApiListGenresRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
             return localVarFp.listGenres(requestParameters.name, options).then((request) => request(axios, basePath));
         },
     };

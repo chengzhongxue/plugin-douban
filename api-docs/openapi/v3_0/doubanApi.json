@@ -5,7 +5,7 @@
     "version" : "2.17.0"
   },
   "servers" : [ {
-    "url" : "http://localhost:58088",
+    "url" : "http://localhost:60176",
     "description" : "Generated server url"
   } ],
   "security" : [ {
@@ -131,10 +131,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
+                  "type" : "string"
                 }
               }
             },
@@ -161,10 +158,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/DoubanMovieVo"
-                  }
+                  "$ref" : "#/components/schemas/DoubanMovieVo"
                 }
               }
             },

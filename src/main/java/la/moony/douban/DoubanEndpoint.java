@@ -55,7 +55,7 @@ public class DoubanEndpoint implements CustomEndpoint {
                         .implementation(String.class)
                     )
                     .response(responseBuilder()
-                        .implementationArray(String.class)
+                        .implementation(String.class)
                     ))
             .GET("doubanmovies/-/getDoubanDetail", this::getDoubanDetail,
                 builder -> builder.operationId("getDoubanDetail")
@@ -69,7 +69,7 @@ public class DoubanEndpoint implements CustomEndpoint {
                         .implementation(String.class)
                     )
                     .response(responseBuilder()
-                        .implementationArray(DoubanMovieVo.class)
+                        .implementation(DoubanMovieVo.class)
                     ))
             .build();
     }

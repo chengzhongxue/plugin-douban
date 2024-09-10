@@ -67,7 +67,7 @@ const handleResetInit = () => {
 <template>
   <node-view-wrapper as="div" class="inline-block-box inline-block">
     <div
-      class="inline-block overflow-hidden transition-all text-center relative h-full w-full"
+      class="inline-block overflow-hidden transition-all text-center relative h-full w-full rounded-md"
       :class="{
         'rounded ring-2': selected,
       }"
