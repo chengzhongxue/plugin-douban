@@ -79,9 +79,10 @@ const mutate = async () => {
           cronDouban: formState.value
         });
     } else {
-      await doubanCoreApiClient.cronDouban.createCronDouban({
+      const { data: createCronDouban } = await doubanCoreApiClient.cronDouban.createCronDouban({
         cronDouban: formState.value
       });
+      formState.value = createCronDouban
     }
   } finally {
     saving.value = false;
@@ -91,7 +92,7 @@ const mutate = async () => {
 onMounted(async () => {
 
   const {data: data} = await doubanCoreApiClient.cronDouban.listCronDouban();
-  let items = data.items;
+  const items = data.items;
   if (items?.length){
     formState.value = items[0]
   }
