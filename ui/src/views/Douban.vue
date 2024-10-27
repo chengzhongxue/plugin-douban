@@ -216,7 +216,7 @@ const onEditingModalClose = async () => {
 <template>
   <DoubanMovieEditingModal
     v-model:visible="editingModal"
-    :doubanMovie="selecteDoubanMovie"
+    :douban-movie="selecteDoubanMovie"
     @close="onEditingModalClose"
   >
   </DoubanMovieEditingModal>

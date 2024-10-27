@@ -9,6 +9,8 @@ import run.halo.app.extension.GVK;
 import java.time.Instant;
 import java.util.Set;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -19,8 +21,10 @@ public class DoubanMovie extends AbstractExtension {
     public static final String REQUIRE_SYNC_ON_STARTUP_INDEX_NAME = "requireSyncOnStartup";
 
 
+    @Schema(requiredMode = REQUIRED)
     private DoubanMovieSpec spec;
 
+    @Schema(requiredMode = REQUIRED)
     private DoubanMovieFaves faves;
 
     private Status status;

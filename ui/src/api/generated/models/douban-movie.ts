@@ -43,7 +43,7 @@ export interface DoubanMovie {
      * @type {DoubanMovieFaves}
      * @memberof DoubanMovie
      */
-    'faves'?: DoubanMovieFaves;
+    'faves': DoubanMovieFaves;
     /**
      * 
      * @type {string}
@@ -61,7 +61,7 @@ export interface DoubanMovie {
      * @type {DoubanMovieSpec}
      * @memberof DoubanMovie
      */
-    'spec'?: DoubanMovieSpec;
+    'spec': DoubanMovieSpec;
     /**
      * 
      * @type {DoubanStatus}

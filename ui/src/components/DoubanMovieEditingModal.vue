@@ -4,6 +4,7 @@ import { ref, computed, nextTick, watch} from "vue";
 import cloneDeep from "lodash.clonedeep";
 import {doubanCoreApiClient} from "@/api";
 import type { DoubanMovie } from "@/api/generated";
+import {toDatetimeLocal, toISOString} from "@/utils/date";
 
 const props = withDefaults(
   defineProps<{
@@ -28,7 +29,7 @@ const initialFormState: DoubanMovie = {
   },
   faves:{
     remark :"",
-    createTime: "",
+    createTime: undefined,
     score: "",
     status: "done"
   },
@@ -52,6 +53,7 @@ const initialFormState: DoubanMovie = {
 const formState = ref<DoubanMovie>(cloneDeep(initialFormState));
 const saving = ref<boolean>(false);
 const formVisible = ref(false);
+const createTime = ref<string | undefined>(undefined);
 
 
 const isUpdateMode = computed(() => {
@@ -92,10 +94,22 @@ watch(
   (doubanMovie) => {
     if (doubanMovie) {
       formState.value = cloneDeep(doubanMovie);
+      createTime.value = toDatetimeLocal(formState.value.faves.createTime);
+    }else {
+      createTime.value = undefined;
     }
+  },
+  {
+    immediate: true,
   }
 );
 
+watch(
+  () => createTime.value,
+  (value) => {
+    formState.value.faves.createTime = value ? toISOString(value) : undefined;
+  }
+);
 const annotationsFormRef = ref();
 
 const handleSaveFriend = async () => {
@@ -242,7 +256,9 @@ const handleSaveFriend = async () => {
           ></FormKit>
           <FormKit
             type="datetime-local"
-            v-model="formState.faves.createTime"
+            min="0000-01-01T00:00"
+            max="9999-12-31T23:59"
+            v-model="createTime"
             name="createTime"
             validation="required"
             label="观看时间"
