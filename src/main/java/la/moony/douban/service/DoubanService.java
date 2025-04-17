@@ -15,7 +15,7 @@ public interface DoubanService {
 
     Mono<DoubanMovieVo> getDoubanDetail(String url);
 
-    Flux<String> listAllGenres();
+    Flux<String> listAllGenres(String type);
 
     Mono<ListResult<DoubanMovie>> listDoubanMovie(DoubanMovieQuery doubanMovieQuery);
 }

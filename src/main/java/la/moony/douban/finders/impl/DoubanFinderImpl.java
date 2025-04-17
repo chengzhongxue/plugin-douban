@@ -8,6 +8,7 @@ import la.moony.douban.vo.DoubanMovieVo;
 import la.moony.douban.vo.DoubanTypeVo;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -64,10 +65,14 @@ public class DoubanFinderImpl implements DoubanFinder {
     }
 
     @Override
-    public Flux<DoubanGenresVo> listAllGenres() {
+    public Flux<DoubanGenresVo> listAllGenres(String type) {
         var listOptions = new ListOptions();
         var query = and(all("spec.genres"),isNotNull("faves.status"));
-        listOptions.setFieldSelector(FieldSelector.of(query));
+        FieldSelector fieldSelector = FieldSelector.of(query);
+        if (StringUtils.isNotEmpty(type)) {
+            fieldSelector =  fieldSelector.andQuery(equal("spec.type", type));
+        }
+        listOptions.setFieldSelector(fieldSelector);
         return client.listAll(DoubanMovie.class, listOptions, defaultSort())
             .flatMapIterable(doubanMovie -> {
                 var genres = doubanMovie.getSpec().getGenres();

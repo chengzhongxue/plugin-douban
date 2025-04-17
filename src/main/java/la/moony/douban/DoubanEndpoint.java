@@ -48,9 +48,9 @@ public class DoubanEndpoint implements CustomEndpoint {
                     .description("List all douban genres.")
                     .tag(doubanMovieTag)
                     .parameter(parameterBuilder()
-                        .name("name")
+                        .name("type")
                         .in(ParameterIn.QUERY)
-                        .description("Genres name to query")
+                        .description("Genres type to query")
                         .required(false)
                         .implementation(String.class)
                     )
@@ -81,10 +81,8 @@ public class DoubanEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> ListGenres(ServerRequest request) {
-        String name = request.queryParam("name").orElse(null);
-        return doubanService.listAllGenres()
-            .filter(genreName -> StringUtils.isBlank(name) || StringUtils.containsIgnoreCase(genreName,
-                name))
+        String type = request.queryParam("type").orElse(null);
+        return doubanService.listAllGenres(type)
             .collectList()
             .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }

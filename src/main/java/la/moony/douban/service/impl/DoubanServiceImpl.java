@@ -213,8 +213,12 @@ public class DoubanServiceImpl  implements DoubanService {
     }
 
     @Override
-    public Flux<String> listAllGenres() {
-        return reactiveClient.listAll(DoubanMovie.class, new ListOptions(),
+    public Flux<String> listAllGenres(String type) {
+        ListOptions listOptions = new ListOptions();
+        if (StringUtils.isNotEmpty(type)) {
+            listOptions.setFieldSelector(FieldSelector.of(equal("spec.type",type)));
+        }
+        return reactiveClient.listAll(DoubanMovie.class, listOptions,
                 Sort.by("metadata.name").descending())
             .flatMapIterable(doubanMovie -> {
                 var genres = doubanMovie.getSpec().getGenres();

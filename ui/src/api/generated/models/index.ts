@@ -7,7 +7,6 @@ export * from './douban-movie-faves';
 export * from './douban-movie-list';
 export * from './douban-movie-spec';
 export * from './douban-movie-vo';
-export * from './douban-status';
 export * from './json-patch-inner';
 export * from './metadata';
 export * from './move-operation';

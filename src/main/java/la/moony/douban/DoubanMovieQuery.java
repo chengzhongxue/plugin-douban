@@ -19,9 +19,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Comparator.comparing;
+import static org.springdoc.core.fn.builders.arrayschema.Builder.arraySchemaBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
+import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static run.halo.app.extension.index.query.QueryFactory.contains;
 import static run.halo.app.extension.index.query.QueryFactory.equal;
+import static run.halo.app.extension.index.query.QueryFactory.in;
 import static run.halo.app.extension.router.QueryParamBuildUtil.sortParameter;
 
 public class DoubanMovieQuery extends SortableRequest {
@@ -52,8 +55,9 @@ public class DoubanMovieQuery extends SortableRequest {
     }
 
     @Nullable
-    public String getGenre() {
-        return StringUtils.defaultIfBlank(queryParams.getFirst("genre"), null);
+    public Optional<List<String>> getGenres() {
+        return Optional.ofNullable(queryParams.get("genre"))
+            .filter(genres -> !genres.isEmpty());
     }
 
     public ListOptions toListOptions() {
@@ -77,9 +81,9 @@ public class DoubanMovieQuery extends SortableRequest {
             .filter(StringUtils::isNotBlank)
             .ifPresent(dataType -> builder.andQuery(equal("spec.dataType", dataType)));
 
-        Optional.ofNullable(getGenre())
-            .filter(StringUtils::isNotBlank)
-            .ifPresent(genres -> builder.andQuery(equal("spec.genres", genres)));
+
+        getGenres().ifPresent(genres -> builder.andQuery(in("spec.genres", genres)));
+
 
         return builder.build();
     }
@@ -143,12 +147,16 @@ public class DoubanMovieQuery extends SortableRequest {
                 .required(false))
             .parameter(parameterBuilder()
                 .in(ParameterIn.QUERY)
-                .name("genres")
-                .description("DoubanMovies filtered by genres.")
-                .implementation(String.class)
-                .required(false))
-
-        ;
+                .name("genre")
+                .description("DoubanMovies filtered by genre.")
+                .required(false)
+                .array(
+                    arraySchemaBuilder()
+                        .uniqueItems(true)
+                        .schema(schemaBuilder()
+                            .implementation(String.class))
+                )
+                .implementationArray(String.class));
     }
 
 

@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import {VButton,VCard,VPageHeader} from "@halo-dev/components";
-import {computed, onMounted, ref} from "vue";
+import {Toast, VButton, VCard, VPageHeader} from "@halo-dev/components";
+import {ref} from "vue";
 import type { CronDouban } from "@/api/generated";
 import cloneDeep from "lodash.clonedeep";
 import {doubanCoreApiClient} from "@/api";
+import {useMutation, useQuery} from "@tanstack/vue-query";
 
 const Se = "cron-douban-default"
 
@@ -13,7 +14,7 @@ const initialFormState: CronDouban = {
     creationTimestamp: ""
   },
   spec: {
-    cron: "0 0 * * * *",
+    cron: "@daily",
     timezone:"Asia/Shanghai",
     suspend: false,
   },
@@ -21,83 +22,65 @@ const initialFormState: CronDouban = {
   apiVersion: "douban.moony.la/v1alpha1",
 };
 
-
-const isUpdateMode = computed(() => {
-  return !!formState.value.metadata.creationTimestamp;
-});
-
-const  saving = ref(false);
 const formState = ref<CronDouban>(cloneDeep(initialFormState));
-const formSchema = ref(
-  [
-    {
-      $formkit: 'checkbox',
-      name: 'suspend',
-      label: '是否启用',
-      value: false,
-    },
-    {
-      $cmp: 'FormKit',
-      props: {
-        type: 'text',
-        name: 'cron',
-        label: '定时表达式',
-        validation: 'required',
-        help: '定时任务表达式，请参考：https://moony.la/cron'
-      }
-    },
-    {
-      $cmp: 'FormKit',
-      props: {
-        type: 'select',
-        name: 'timezone',
-        label: '时区',
-        options: [
-          {value: "Asia/Shanghai", label: 'Asia/Shanghai (GMT+08:00)'},
-        ],
-      }
-    },
-  ]
-)
 
-const mutate = async () => {
-  saving.value = true;
-  try {
-    if (isUpdateMode.value) {
-      const {
-        data: data
-      } = await doubanCoreApiClient.cronDouban.getCronDouban({
+const {isLoading: cronIsLoading, isFetching: cronIsFetching} = useQuery({
+  queryKey: ["cron-douban"],
+  queryFn: async () => {
+    const {data} = await doubanCoreApiClient.cronDouban.getCronDouban({
+      name: Se
+    },{
+      mute: true
+    });
+    return data;
+  },
+  onSuccess(data) {
+    formState.value =  data
+  },
+  retry: false
+})
+
+const { mutate:save, isLoading:saveIsLoading } = useMutation({
+  mutationKey: ["cron-douban-save"],
+  mutationFn: async () => {
+    if (formState.value.metadata.creationTimestamp) {
+      const { data: data } = await doubanCoreApiClient.cronDouban.getCronDouban({
         name: Se
       });
-      return formState.value = {
+      formState.value = {
         ...formState.value,
         status: data.status,
         metadata: data.metadata
-      },
-        await doubanCoreApiClient.cronDouban.updateCronDouban({
-          name: Se,
-          cronDouban: formState.value
-        });
-    } else {
-      const { data: createCronDouban } = await doubanCoreApiClient.cronDouban.createCronDouban({
+      };
+      return await doubanCoreApiClient.cronDouban.updateCronDouban({
+        name: Se,
         cronDouban: formState.value
       });
-      formState.value = createCronDouban
+    }else {
+      return await doubanCoreApiClient.cronDouban.createCronDouban({
+        cronDouban: formState.value
+      });
     }
-  } finally {
-    saving.value = false;
+  },
+  onSuccess(data) {
+    formState.value = data.data
+    Toast.success("保存成功");
   }
-}
-
-onMounted(async () => {
-
-  const {data: data} = await doubanCoreApiClient.cronDouban.listCronDouban();
-  const items = data.items;
-  if (items?.length){
-    formState.value = items[0]
-  }
-
 });
+
+const cronOptions = [{
+  label: "每月（每月 1 号 0 点）",
+  value: "@monthly"
+}, {
+  label: "每周（每周第一天 的 0 点）",
+  value: "@weekly"
+}, {
+  label: "每天（每天的 0 点）",
+  value: "@daily"
+}, {
+  label: "每小时",
+  value: "@hourly"
+}]
 
 </script>
 
@@ -120,19 +103,45 @@ onMounted(async () => {
               id="cron-setting"
               v-model="formState.spec"
               name="cron-setting"
-              :actions="false"
               :preserve="true"
               type="form"
-              @submit="mutate"
-              submit-label="Login"
+              :disabled="cronIsFetching"
+              @submit="save"
             >
-              <FormKitSchema :schema="formSchema"/>
+              <FormKit
+                type="checkbox"
+                name="suspend"
+                label="是否启用"
+                value="false"
+              />
+              <FormKit
+                type="select"
+                name="cron"
+                label="定时表达式"
+                allow-create
+                searchable
+                validatio="required"
+                :options="cronOptions"
+                help="定时表达式规则请参考：https://docs.spring.io/spring-framework/reference/integration/scheduling.html#scheduling-cron-expression"
+              />
+              <FormKit
+                type="select"
+                name="timezone"
+                label="时区"
+                :options="[
+                   {
+                     value: 'Asia/Shanghai', 
+                     label: 'Asia/Shanghai (GMT+08:00)'
+                   },
+                ]"
+              />
             </FormKit>
           </div>
-          <div v-permission="['plugin:friends:manage']" class="pt-5">
+          <div v-permission="['plugin:douban:manage']" class="pt-5">
             <div class="flex justify-start">
               <VButton
-                :loading="saving"
+                :loading="saveIsLoading"
+                :cronIsLoading="cronIsLoading"
                 type="secondary"
                 @click="$formkit.submit('cron-setting')"
               >

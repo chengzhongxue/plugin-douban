@@ -19,7 +19,6 @@ models/douban-movie-list.ts
 models/douban-movie-spec.ts
 models/douban-movie-vo.ts
 models/douban-movie.ts
-models/douban-status.ts
 models/index.ts
 models/json-patch-inner.ts
 models/metadata.ts

@@ -1,6 +1,13 @@
 /// <reference types="vite/client" />
 
-declare module "*.vue" {
-  import Vue from "vue";
-  export default Vue;
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    mute?: boolean;
+  }
+}
+
+declare module "vue" {
+  interface ComponentCustomProperties {
+    $formkit: any;
+  }
 }

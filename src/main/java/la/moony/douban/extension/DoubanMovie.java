@@ -27,8 +27,6 @@ public class DoubanMovie extends AbstractExtension {
     @Schema(requiredMode = REQUIRED)
     private DoubanMovieFaves faves;
 
-    private Status status;
-
 
     @Data
     public static class DoubanMovieSpec {
@@ -54,13 +52,6 @@ public class DoubanMovie extends AbstractExtension {
         private Instant createTime;
         private String score;
         private String status;
-    }
-
-
-    @Data
-    @Schema(name = "DoubanStatus")
-    public static class Status {
-        private long observedVersion;
     }
 
 

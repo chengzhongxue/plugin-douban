@@ -43,7 +43,7 @@ public class DoubanRouter {
             .flatMap( templateName -> ServerResponse.ok().render(templateName,
                 java.util.Map.of("title",getDoubanTitle(),
                     "douban",doubanFinder.list(type,status),
-                    "genres",doubanFinder.listAllGenres(),
+                    "genres",doubanFinder.listAllGenres(type),
                     "types",doubanFinder.listAllType())));
     }
 

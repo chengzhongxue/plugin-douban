@@ -9,7 +9,7 @@ import run.halo.app.extension.ListResult;
 
 public interface DoubanFinder {
 
-    Flux<DoubanGenresVo> listAllGenres();
+    Flux<DoubanGenresVo> listAllGenres(String type);
 
     Flux<DoubanTypeVo> listAllType();
 

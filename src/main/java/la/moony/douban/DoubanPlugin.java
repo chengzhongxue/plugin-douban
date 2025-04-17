@@ -2,7 +2,6 @@ package la.moony.douban;
 
 import la.moony.douban.extension.CronDouban;
 import la.moony.douban.extension.DoubanMovie;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.Scheme;
 import run.halo.app.extension.SchemeManager;
@@ -10,7 +9,6 @@ import run.halo.app.extension.index.IndexSpec;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static run.halo.app.extension.index.IndexAttributeFactory.multiValueAttribute;
@@ -38,7 +36,7 @@ public class DoubanPlugin extends BasePlugin {
                 .setName("spec.genres")
                 .setIndexFunc(multiValueAttribute(DoubanMovie.class, doubanMovie -> {
                     var genres = doubanMovie.getSpec().getGenres();
-                    return genres == null ? Set.of() : genres;
+                    return genres == null ? Set.of() : Set.copyOf(genres);
                 }))
             );
             indexSpecs.add(new IndexSpec()
@@ -72,19 +70,6 @@ public class DoubanPlugin extends BasePlugin {
                     return createTime == null ? null : createTime.toString();
                 }))
             );
-
-            indexSpecs.add(new IndexSpec()
-                .setName(DoubanMovie.REQUIRE_SYNC_ON_STARTUP_INDEX_NAME)
-                .setIndexFunc(simpleAttribute(DoubanMovie.class, doubanMovie -> {
-                    var observedVersion = Optional.ofNullable(doubanMovie.getStatus())
-                        .map(DoubanMovie.Status::getObservedVersion)
-                        .orElse(-1L);
-                    if (observedVersion < doubanMovie.getMetadata().getVersion()) {
-                        return BooleanUtils.TRUE;
-                    }
-                    // don't care about the false case
-                    return null;
-                })));
         });
         schemeManager.register(CronDouban.class);
     }
