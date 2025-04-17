@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id "com.github.node-gradle.node" version "7.0.2"
     id "io.freefair.lombok" version "8.0.1"
-    id "run.halo.plugin.devtools" version "0.1.1"
+    id "run.halo.plugin.devtools" version "0.2.0"
 }
 
 group 'run.halo.starter'
@@ -35,13 +35,20 @@ node {
     nodeProjectDir = file("${project.projectDir}/ui")
 }
 
-task buildFrontend(type: PnpmTask) {
+tasks.register('buildFrontend', PnpmTask) {
     args = ['build']
+    dependsOn('installDepsForUI')
+}
+
+tasks.register('installDepsForUI', PnpmTask) {
+    args = ['install']
 }
 
 build {
     // build frontend before build
-    tasks.getByName('compileJava').dependsOn('buildFrontend')
+    tasks.named('compileJava').configure {
+        dependsOn('buildFrontend')
+    }
 }
 
 halo {
