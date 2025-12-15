@@ -1,12 +1,9 @@
 import { definePlugin } from "@halo-dev/console-shared";
-import Douban from "./views/Douban.vue";
-import Cron from "./views/Cron.vue";
 import TablerBrandDouban from '~icons/tabler/brand-douban';
 import { markRaw } from "vue";
-import { DoubanExtension } from "./editor";
+import 'uno.css';
 
 export default definePlugin({
-  name: "plugin-douban",
   components: {},
   routes: [
     {
@@ -29,12 +26,12 @@ export default definePlugin({
           {
             path: "",
             name: "Douban",
-            component: Douban,
+            component: () => import('./views/Douban.vue'),
           },
           {
             path: "cron",
             name: "DoubanCron",
-            component: Cron,
+            component: () => import('./views/Cron.vue'),
             meta: {
               title: "豆瓣任务",
               searchable: true,
@@ -46,7 +43,8 @@ export default definePlugin({
     },
   ],
   extensionPoints: {
-    "default:editor:extension:create": () => {
+    'default:editor:extension:create': async () => {
+      const { DoubanExtension } = await import('./editor');
       return [DoubanExtension];
     },
   },

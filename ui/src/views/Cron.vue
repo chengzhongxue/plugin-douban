@@ -94,10 +94,10 @@ const cronOptions = [{
       </VSpace>
     </template>
   </VPageHeader>
-  <div class="m-0 md:m-4">
-    <VCard :body-class="['!p-0']">
+  <div class=":uno: m-0 md:m-4">
+    <VCard :body-class="[':uno: !p-0']">
       <Transition mode="out-in" name="fade">
-        <div class="bg-white p-4">
+        <div class=":uno: bg-white p-4">
           <div>
             <FormKit
               id="cron-setting"
@@ -137,8 +137,8 @@ const cronOptions = [{
               />
             </FormKit>
           </div>
-          <div v-permission="['plugin:douban:manage']" class="pt-5">
-            <div class="flex justify-start">
+          <div v-permission="['plugin:douban:manage']" class=":uno: pt-5">
+            <div class=":uno: flex justify-start">
               <VButton
                 :loading="saveIsLoading"
                 :cronIsLoading="cronIsLoading"

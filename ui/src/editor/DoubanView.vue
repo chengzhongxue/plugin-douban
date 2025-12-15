@@ -65,24 +65,24 @@ const handleResetInit = () => {
 </script>
 
 <template>
-  <node-view-wrapper as="div" class="inline-block-box inline-block">
+  <node-view-wrapper as="div" class=":uno: inline-block-box inline-block">
     <div
-      class="inline-block overflow-hidden transition-all text-center relative h-full w-full rounded-md"
+      class=":uno: inline-block overflow-hidden transition-all text-center relative h-full w-full rounded-md"
       :class="{
-        'rounded ring-2': selected,
+        ':uno: rounded ring-2': selected,
       }"
     >
-      <div v-if="!src || selecteDoubanMovie?.spec==undefined" class="relative">
-        <div class="flex h-64 w-full items-center justify-center" style="height: 180px;">
+      <div v-if="!src || selecteDoubanMovie?.spec==undefined" class=":uno: relative">
+        <div class=":uno: flex h-64 w-full items-center justify-center" style="height: 180px;">
           <div
-            class="flex h-full w-full cursor-pointer flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50"
+            class=":uno: flex h-full w-full cursor-pointer flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50"
           >
             <div
-              class="flex flex-col items-center justify-center space-y-7 pb-6 pt-5 editor-link-obtain"
+              class=":uno: flex flex-col items-center justify-center space-y-7 pb-6 pt-5 editor-link-obtain"
             >
               <VSpace>
                 <VDropdown>
-                  <div class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20" style="margin: 0.8em 1.5em;">
+                  <div class=":uno: flex h-14 w-14 items-center justify-center rounded-full bg-primary/20" style="margin: 0.8em 1.5em;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" style="font-size: 1.6rem;">
                       <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h16M5 4h14M8 8h8a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2m8 6l-2 6m-6-3l1 3">
                       </path>
@@ -92,7 +92,7 @@ const handleResetInit = () => {
                   <template #popper>
                     <input
                       v-model="editorLinkObtain"
-                      class="block w-full rounded-md border border-gray-300 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 hover:bg-gray-100"
+                      class=":uno: block w-full rounded-md border border-gray-300 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 hover:bg-gray-100"
                       placeholder="输入链接，按回车确定"
                       @keydown.enter="handleEnterSetExternalLink"
                       @change="handleCheckAllChange"
@@ -104,7 +104,7 @@ const handleResetInit = () => {
           </div>
         </div>
       </div>
-      <div v-else class="group relative">
+      <div v-else class=":uno: group relative">
         <div class="doulist-item">
           <div class="doulist-subject">
             <div class="doulist-post"><img decoding="async" referrerpolicy="no-referrer"
@@ -123,7 +123,7 @@ const handleResetInit = () => {
         </div>
         <div
           v-if="src"
-          class="absolute left-0 top-0 hidden h-1/4 w-full cursor-pointer justify-end bg-gradient-to-b from-gray-300 to-transparent p-2 ease-in-out group-hover:flex"
+          class=":uno: absolute left-0 top-0 hidden h-1/4 w-full cursor-pointer justify-end bg-gradient-to-b from-gray-300 to-transparent p-2 ease-in-out group-hover:flex"
         >
           <VButton size="sm" type="secondary" @click="handleResetInit">
             替换
@@ -134,7 +134,7 @@ const handleResetInit = () => {
   </node-view-wrapper>
 </template>
 
-<style>
+<style lang="scss">
 
 :root {
   --db--text-color-light: rgba(0, 0, 0, 0.6);
@@ -228,7 +228,7 @@ const handleResetInit = () => {
   height: 16px;
   width: 80px;
   background-repeat: repeat;
-  background-image: url(/plugins/plugin-douban/assets/static/img/star.svg);
+  background-image: url('@/assets/star.svg');
   background-size: auto 100%;
   margin-right: 5px
 }
@@ -240,7 +240,7 @@ const handleResetInit = () => {
   height: 16px;
   overflow: hidden;
   background-repeat: repeat;
-  background-image: url(/plugins/plugin-douban/assets/static/img/star-fill.svg);
+  background-image: url('@/assets/star-fill.svg');
   background-size: auto 100%
 }
 

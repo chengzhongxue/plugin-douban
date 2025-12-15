@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
-import { ref, computed, nextTick, watch} from "vue";
+import { ref, computed, nextTick, watch, useTemplateRef} from "vue";
 import cloneDeep from "lodash.clonedeep";
 import {doubanCoreApiClient} from "@/api";
 import type { DoubanMovie } from "@/api/generated";
@@ -8,17 +8,14 @@ import {toDatetimeLocal, toISOString} from "@/utils/date";
 
 const props = withDefaults(
   defineProps<{
-    visible: boolean;
     doubanMovie?: DoubanMovie;
   }>(),
   {
-    visible: false,
     doubanMovie: undefined,
   }
 );
 
 const emit = defineEmits<{
-  (event: "update:visible", value: boolean): void;
   (event: "close"): void;
 }>();
 
@@ -54,7 +51,7 @@ const formState = ref<DoubanMovie>(cloneDeep(initialFormState));
 const saving = ref<boolean>(false);
 const formVisible = ref(false);
 const createTime = ref<string | undefined>(undefined);
-
+const modal = useTemplateRef<InstanceType<typeof VModal> | null>("modal");
 
 const isUpdateMode = computed(() => {
   return !!formState.value.metadata.creationTimestamp;
@@ -64,30 +61,6 @@ const modalTitle = computed(() => {
   return isUpdateMode.value ? "编辑条目" : "新建条目";
 });
 
-const onVisibleChange = (visible: boolean) => {
-  emit("update:visible", visible);
-  if (!visible) {
-    emit("close");
-  }
-};
-
-const handleResetForm = () => {
-  formState.value = cloneDeep(initialFormState);
-};
-
-watch(
-  () => props.visible,
-  (visible) => {
-    if (visible) {
-      formVisible.value = true;
-    } else {
-      setTimeout(() => {
-        formVisible.value = false;
-        handleResetForm();
-      }, 200);
-    }
-  }
-);
 
 watch(
   () => props.doubanMovie,
@@ -143,7 +116,7 @@ const handleSaveFriend = async () => {
 
     Toast.success("保存成功");
 
-    onVisibleChange(false);
+    modal.value?.close();
   } catch (e) {
     console.error(e);
   } finally {
@@ -153,10 +126,10 @@ const handleSaveFriend = async () => {
 </script>
 <template>
   <VModal
+    ref="modal"
     :title="modalTitle"
-    :visible="visible"
     :width="650"
-    @update:visible="onVisibleChange"
+    @close="emit('close')"
   >
     <template #actions>
       <slot name="append-actions" />
@@ -170,16 +143,16 @@ const handleSaveFriend = async () => {
       :config="{ validationVisibility: 'submit' }"
       @submit="handleSaveFriend"
     >
-      <div class="md:grid md:grid-cols-4 md:gap-6">
-        <div class="md:col-span-1">
-          <div class="sticky top-0">
-            <span class="text-base font-medium text-gray-900"> 常规 </span>
+      <div class=":uno: md:grid md:grid-cols-4 md:gap-6">
+        <div class=":uno: md:col-span-1">
+          <div class=":uno: sticky top-0">
+            <span class=":uno: text-base font-medium text-gray-900"> 常规 </span>
           </div>
         </div>
-        <div class="mt-5 divide-y divide-gray-100 md:col-span-3 md:mt-0">
+        <div class=":uno: mt-5 divide-y divide-gray-100 md:col-span-3 md:mt-0">
           <td v-if="isUpdateMode">
             <p><img :src="formState.spec.poster" width="100"></p>
-            <p>{{formState.spec.name}} <span class="db--titletag">{{formState.spec.dataType == 'db' ? '豆瓣' : formState.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</span>
+            <p>{{formState.spec.name}} <span class=":uno: db--titletag">{{formState.spec.dataType == 'db' ? '豆瓣' : formState.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</span>
             </p>
             <p>{{formState.spec.cardSubtitle}}</p>
           </td>
@@ -303,13 +276,13 @@ const handleSaveFriend = async () => {
         >
           提交
         </VButton>
-        <VButton @click="onVisibleChange(false)">取消</VButton>
+        <VButton @click="modal?.close()">取消</VButton>
       </VSpace>
     </template>
   </VModal>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 
 .db--titletag {
   font-size: 13px;

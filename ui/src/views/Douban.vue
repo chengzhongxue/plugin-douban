@@ -17,13 +17,12 @@ import {useQuery, useQueryClient} from "@tanstack/vue-query";
 import {computed, ref, watch} from "vue";
 import { axiosInstance } from "@halo-dev/api-client";
 import {formatDatetime} from "@/utils/date";
+import TablerBrandDouban from '~icons/tabler/brand-douban';
 
 import {useRouteQuery} from "@vueuse/router";
 import DoubanMovieEditingModal from "../components/DoubanMovieEditingModal.vue";
 import { doubanApiClient, doubanCoreApiClient } from "@/api";
 import type { DoubanMovie } from "@/api/generated";
-
-const queryClient = useQueryClient();
 
 const selecteDoubanMovie = ref<DoubanMovie | undefined>();
 const selecteDoubanMovies = ref<string[]>([]);
@@ -206,8 +205,8 @@ const handleOpenCreateModal = (doubanMovie: DoubanMovie) => {
   editingModal.value = true;
 };
 
-const onEditingModalClose = async () => {
-  selecteDoubanMovie.value = undefined;
+function onEditingModalClose () {
+  editingModal.value = false;
   refetch();
 };
 
@@ -215,12 +214,15 @@ const onEditingModalClose = async () => {
 
 <template>
   <DoubanMovieEditingModal
-    v-model:visible="editingModal"
+    v-if="editingModal"
     :douban-movie="selecteDoubanMovie"
     @close="onEditingModalClose"
   >
   </DoubanMovieEditingModal>
   <VPageHeader title="豆瓣">
+    <template #icon>
+      <TablerBrandDouban />
+    </template>
     <template #actions>
       <VSpace v-permission="['plugin:douban:manage']">
         <VButton :route="{ name: 'DoubanCron' }" size="sm">
@@ -231,7 +233,7 @@ const onEditingModalClose = async () => {
           @click="editingModal = true"
         >
           <template #icon>
-            <IconAddCircle class="h-full w-full" />
+            <IconAddCircle class=":uno: h-full w-full" />
           </template>
           新建
         </VButton>
@@ -243,21 +245,21 @@ const onEditingModalClose = async () => {
     </template>
 
   </VPageHeader>
-  <div class="m-0 md:m-4">
-    <VCard :body-class="['!p-0']">
+  <div class=":uno: m-0 md:m-4">
+    <VCard :body-class="[':uno: !p-0']">
       <template #header>
-        <div class="block w-full bg-gray-50 px-4 py-3">
-          <div class="relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center" >
+        <div class=":uno: block w-full bg-gray-50 px-4 py-3">
+          <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center" >
             <div
               v-permission="['plugin:douban:manage']"
-              class="hidden items-center sm:flex" >
+              class=":uno: hidden items-center sm:flex" >
               <input
                 v-model="checkedAll"
                 type="checkbox"
                 @change="handleCheckAllChange"
               />
             </div>
-            <div class="flex w-full flex-1 items-center sm:w-auto" >
+            <div class=":uno: flex w-full flex-1 items-center sm:w-auto" >
               <FormKit
                 v-if="!selecteDoubanMovies.length"
                 v-model="searchText"
@@ -268,11 +270,11 @@ const onEditingModalClose = async () => {
               >
                 <template v-if="keyword" #suffix>
                   <div
-                    class="group flex h-full cursor-pointer items-center bg-white px-2 transition-all hover:bg-gray-50"
+                    class=":uno: group flex h-full cursor-pointer items-center bg-white px-2 transition-all hover:bg-gray-50"
                     @click="handleReset"
                   >
                     <IconCloseCircle
-                      class="h-4 w-4 text-gray-500 group-hover:text-gray-700"
+                      class=":uno: h-4 w-4 text-gray-500 group-hover:text-gray-700"
                     />
                   </div>
                 </template>
@@ -283,7 +285,7 @@ const onEditingModalClose = async () => {
                 </VButton>
               </VSpace>
             </div>
-            <VSpace spacing="lg" class="flex-wrap">
+            <VSpace spacing="lg" class=":uno: flex-wrap">
               <FilterCleanButton
                 v-if="hasFilters"
                 @click="handleClearFilters"
@@ -379,15 +381,15 @@ const onEditingModalClose = async () => {
                       },
                     ]"
               />
-              <div class="flex flex-row gap-2">
+              <div class=":uno: flex flex-row gap-2">
                 <div
-                  class="group cursor-pointer rounded p-1 hover:bg-gray-200"
+                  class=":uno: group cursor-pointer rounded p-1 hover:bg-gray-200"
                   @click="refetch()"
                 >
                   <IconRefreshLine
                     v-tooltip="'刷新'"
                     :class="{ 'animate-spin text-gray-900': isFetching }"
-                    class="h-4 w-4 text-gray-600 group-hover:text-gray-900"
+                    class=":uno: h-4 w-4 text-gray-600 group-hover:text-gray-900"
                   />
                 </div>
               </div>
@@ -411,48 +413,48 @@ const onEditingModalClose = async () => {
       </Transition>
 
       <Transition v-else appear name="fade">
-        <div class="w-full relative overflow-x-auto">
-          <table class="w-full  text-sm text-left text-gray-500 widefat ">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+        <div class=":uno: w-full relative overflow-x-auto">
+          <table class=":uno: w-full  text-sm text-left text-gray-500 widefat ">
+            <thead class=":uno: text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
               <th v-permission="['plugin:douban:manage']" 
-                  scope="col" class="px-4 py-3"><div class="w-max flex items-center"> </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">标题 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">封面 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">来源 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">评分 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">描述 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">时间 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">状态 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">我的短评 </div></th>
-              <th scope="col" class="px-4 py-3"><div class="w-max flex items-center">我的评分 </div></th>
+                  scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center"> </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">标题 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">封面 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">来源 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">评分 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">描述 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">时间 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">状态 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">我的短评 </div></th>
+              <th scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center">我的评分 </div></th>
               <th v-permission="['plugin:douban:manage']" 
-                  scope="col" class="px-4 py-3"><div class="w-max flex items-center"> </div></th>
+                  scope="col" class=":uno: px-4 py-3"><div class=":uno: w-max flex items-center"> </div></th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="doubanMovie in doubanMovies" class="border-b last:border-none hover:bg-gray-100">
-              <td class="px-4 py-4 " v-permission="['plugin:douban:manage']">
+            <tr v-for="doubanMovie in doubanMovies" class=":uno: border-b last:border-none hover:bg-gray-100">
+              <td class=":uno: px-4 py-4 " v-permission="['plugin:douban:manage']">
                 <input
                   v-model="selecteDoubanMovies"
                   :value="doubanMovie.metadata.name"
-                  class="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                  class=":uno: h-4 w-4 rounded border-gray-300 text-indigo-600"
                   name="post-checkbox"
                   type="checkbox"
                 />
               </td>
-              <td class="px-4 py-4">{{doubanMovie.spec.name}}</td>
-              <td class="px-4 py-4 poster">
+              <td class=":uno: px-4 py-4">{{doubanMovie.spec.name}}</td>
+              <td class=":uno: px-4 py-4 poster">
                 <img :src="doubanMovie.spec.poster"  referrerpolicy="no-referrer">
               </td>
-              <td class="px-4 py-4 table-td">{{doubanMovie.spec.dataType == 'db' ? '豆瓣' : doubanMovie.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</td>
-              <td class="px-4 py-4 table-td">{{doubanMovie.spec.score}}</td>
-              <td class="px-4 py-4">{{doubanMovie.spec.cardSubtitle}}</td>
-              <td class="px-4 py-4 table-td">{{formatDatetime(doubanMovie.faves.createTime)}}</td>
-              <td class="px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status)}}</td>
-              <td class="px-4 py-4">{{doubanMovie.faves.remark}}</td>
-              <td class="px-4 py-4">{{doubanMovie.faves.score}}</td>
-              <td class="px-4 py-4 table-td" v-permission="['plugin:douban:manage']">
+              <td class=":uno: px-4 py-4 table-td">{{doubanMovie.spec.dataType == 'db' ? '豆瓣' : doubanMovie.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{doubanMovie.spec.score}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.spec.cardSubtitle}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{formatDatetime(doubanMovie.faves.createTime)}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status)}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.faves.remark}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.faves.score}}</td>
+              <td class=":uno: px-4 py-4 table-td" v-permission="['plugin:douban:manage']">
                 <VDropdownItem  @click="handleOpenCreateModal(doubanMovie)">
                   编辑
                 </VDropdownItem>
@@ -477,7 +479,7 @@ const onEditingModalClose = async () => {
 
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 
 .widefat * {
   word-wrap: break-word;
