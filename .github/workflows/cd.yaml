@@ -8,10 +8,13 @@ on:
 jobs:
   cd:
     uses: halo-sigs/reusable-workflows/.github/workflows/plugin-cd.yaml@v3
-    secrets:
-      halo-pat: ${{ secrets.HALO_PAT }}
     permissions:
       contents: write
+    secrets:
+      halo-pat: ${{ secrets.HALO_PAT }}
     with:
-      app-id: app-srBOL
       ui-path: "ui"
+      pnpm-version: 10
+      node-version: 22
+      java-version: 21
+      app-id: app-srBOL
