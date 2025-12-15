@@ -1,0 +1,42 @@
+<link rel="stylesheet" th:href="@{/plugins/plugin-douban/assets/static/db.min.css?v={version}(version=${plugin.version})}" />
+<style>
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-weight: 400;
+    }
+
+    .metabar--block {
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        position: relative;
+        height: 68px;
+        font-size: 14px;
+        justify-content: center;
+    }
+
+    .layoutSingleColumn {
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+        width: 92%;
+    }
+
+    .layoutSingleColumn--wide {
+        max-width: 1180px;
+    }
+
+    .u-paddingTop50 {
+        padding-top: 50px
+    }
+
+    .db--title a {
+        color: rgb(0 0 0 / 80%);
+        text-decoration: none;
+    }
+</style>

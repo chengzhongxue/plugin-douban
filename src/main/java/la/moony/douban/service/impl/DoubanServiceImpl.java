@@ -42,8 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static run.halo.app.extension.index.query.QueryFactory.and;
-import static run.halo.app.extension.index.query.QueryFactory.equal;
+import static run.halo.app.extension.index.query.Queries.and;
+import static run.halo.app.extension.index.query.Queries.equal;
 
 @Component
 public class DoubanServiceImpl  implements DoubanService {

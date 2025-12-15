@@ -1,54 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="https://www.thymeleaf.org" th:with="version = '1.2.2'">
+<html lang="zh-CN" xmlns:th="https://www.thymeleaf.org">
 
 <head>
     <title th:text="${title}"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" id="wpd-css-css" th:href="@{/plugins/plugin-douban/assets/static/db.min.css?v={version}(version=${version})}" type="text/css"
-          media="screen">
-    <style>
-        h1,
-        h2,
-        h3,
-        h4,
-        h5 {
-            margin-top: 0;
-            margin-bottom: 0;
-            font-weight: 400;
-        }
-
-        .metabar--block {
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            position: relative;
-            height: 68px;
-            font-size: 14px;
-            justify-content: center;
-        }
-
-        .layoutSingleColumn {
-            max-width: 720px;
-            margin-left: auto;
-            margin-right: auto;
-            width: 92%;
-        }
-
-        .layoutSingleColumn--wide {
-            max-width: 1180px;
-        }
-
-        .u-paddingTop50 {
-            padding-top: 50px
-        }
-
-        .db--title a {
-            color: rgb(0 0 0 / 80%);
-            text-decoration: none;
-        }
-    </style>
+    <th:block th:replace="~{plugin:plugin-douban:modules/style}"></th:block>
 </head>
 
 <body>
@@ -58,34 +16,9 @@
     </div>
 </header>
 <main class="main">
-    <div class="layoutSingleColumn layoutSingleColumn--wide u-paddingTop50">
-        <section class="db--container">
-            <nav class="db--nav">
-                <div th:each="type : ${types}" class="db--navItem JiEun"
-                     th:classappend="${type.key == 'movie' ? 'current' : ''}" th:data-type="${type.key}"
-                     th:text="${type.key}"></div>
-            </nav>
-            <div class="db--genres"></div>
-            <div class="db--type">
-                <div class="db--typeItem" data-status="mark">想看</div>
-                <div class="db--typeItem" data-status="doing">在看</div>
-                <div class="db--typeItem is-active" data-status="done">看过</div>
-            </div>
-            <div class="db--list db--list__card" data-type="movie">
-
-            </div>
-            <div class="block-more block-more__centered">
-                <div class="lds-ripple u-hide">
-                </div>
-            </div>
-        </section>
-    </div>
-
+    <th:block th:replace="~{plugin:plugin-douban:modules/douban}"></th:block>
 </main>
-<footer class="site--footer">
-    <script  th:src="@{/plugins/plugin-douban/assets/static/db.min.js?v={version}(version=${version})}"></script>
-</footer>
-
+<th:block th:replace="~{plugin:plugin-douban:modules/script}"></th:block>
 </body>
 
 </html>

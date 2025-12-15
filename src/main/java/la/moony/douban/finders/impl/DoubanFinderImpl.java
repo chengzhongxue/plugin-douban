@@ -23,10 +23,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import static run.halo.app.extension.index.query.QueryFactory.all;
-import static run.halo.app.extension.index.query.QueryFactory.and;
-import static run.halo.app.extension.index.query.QueryFactory.equal;
-import static run.halo.app.extension.index.query.QueryFactory.isNotNull;
+
+import static run.halo.app.extension.ExtensionUtil.notDeleting;
+import static run.halo.app.extension.index.query.Queries.all;
+import static run.halo.app.extension.index.query.Queries.and;
+import static run.halo.app.extension.index.query.Queries.equal;
+import static run.halo.app.extension.index.query.Queries.isNull;
 
 
 @Finder("doubanFinder")
@@ -47,7 +49,7 @@ public class DoubanFinderImpl implements DoubanFinder {
     @Override
     public Flux<DoubanMovieVo> listByGenre(String genre) {
         var listOptions = new ListOptions();
-        var query = and(isNotNull("faves.status"),equal("spec.genres", genre));
+        var query = and(isNull("faves.status").not(),equal("spec.genres", genre));
         listOptions.setFieldSelector(FieldSelector.of(query));
         return client.listAll(DoubanMovie.class, listOptions, defaultSort())
             .flatMap(this::getDoubanMovieVo);
@@ -67,7 +69,7 @@ public class DoubanFinderImpl implements DoubanFinder {
     @Override
     public Flux<DoubanGenresVo> listAllGenres(String type) {
         var listOptions = new ListOptions();
-        var query = and(all("spec.genres"),isNotNull("faves.status"));
+        var query = and(all("spec.genres"),isNull("faves.status").not());
         FieldSelector fieldSelector = FieldSelector.of(query);
         if (StringUtils.isNotEmpty(type)) {
             fieldSelector =  fieldSelector.andQuery(equal("spec.type", type));
@@ -100,7 +102,7 @@ public class DoubanFinderImpl implements DoubanFinder {
     @Override
     public Flux<DoubanTypeVo> listAllType() {
         var listOptions = new ListOptions();
-        var query = and(all("spec.type"),isNotNull("faves.status"));
+        var query = and(all("spec.type"),isNull("faves.status").not());
         listOptions.setFieldSelector(FieldSelector.of(query));
         return client.listAll(DoubanMovie.class, listOptions, defaultSort())
             .flatMapIterable(doubanMovie -> {
@@ -151,28 +153,28 @@ public class DoubanFinderImpl implements DoubanFinder {
 
     @Override
     public Mono<ListResult<DoubanMovieVo>> listByType(Integer page, Integer size, String typeName) {
-        var query = all();
-        if (org.apache.commons.lang3.StringUtils.isNoneBlank(typeName)) {
-            query = and(query, equal("spec.type", typeName));
+        FieldSelector fieldSelector = FieldSelector.of(notDeleting());
+        if (StringUtils.isNoneBlank(typeName)) {
+            fieldSelector = fieldSelector.andQuery(equal("spec.type", typeName));
         }
         var pageRequest =
             PageRequestImpl.of(pageNullSafe(page), sizeNullSafe(size), defaultSort());
-        return pageDoubanMovie(FieldSelector.of(query), pageRequest);
+        return pageDoubanMovie(fieldSelector, pageRequest);
     }
 
     @Override
     public Mono<ListResult<DoubanMovieVo>> list(Integer page, Integer size, String typeName, String statusName) {
-        var query = all();
-        if (org.apache.commons.lang3.StringUtils.isNoneBlank(typeName)) {
-            query = and(query, equal("spec.type", typeName));
+        FieldSelector fieldSelector = FieldSelector.of(notDeleting());
+        if (StringUtils.isNoneBlank(typeName)) {
+            fieldSelector = fieldSelector.andQuery(equal("spec.type", typeName));
         }
-        if (org.apache.commons.lang3.StringUtils.isNoneBlank(statusName)) {
-            query = and(query, equal("faves.status", statusName));
+        if (StringUtils.isNoneBlank(statusName)) {
+            fieldSelector = fieldSelector.andQuery(equal("faves.status", statusName));
         }
         var pageRequest =
             PageRequestImpl.of(pageNullSafe(page), sizeNullSafe(size), defaultSort());
 
-        return pageDoubanMovie(FieldSelector.of(query), pageRequest);
+        return pageDoubanMovie(fieldSelector, pageRequest);
     }
 
 
@@ -189,30 +191,31 @@ public class DoubanFinderImpl implements DoubanFinder {
     @Override
     public Flux<DoubanMovieVo> list(String type, String status) {
         var listOptions = new ListOptions();
-        var query = all();
-        if (org.apache.commons.lang3.StringUtils.isNoneBlank(type)) {
-            if (org.apache.commons.lang3.StringUtils.isNoneBlank(type)){
-                query = and(query,equal("spec.type", type));
+        FieldSelector fieldSelector = FieldSelector.of(notDeleting());
+        if (StringUtils.isNoneBlank(type)) {
+            if (StringUtils.isNoneBlank(type)){
+                fieldSelector = fieldSelector.andQuery(equal("spec.type", type));
             }else {
-                query = and(equal("faves.status", "done"),equal("spec.type", type));
+                fieldSelector = fieldSelector.andQuery(equal("faves.status", "done"))
+                    .andQuery(equal("spec.type", type));
             }
         }
-        if (org.apache.commons.lang3.StringUtils.isNoneBlank(status)) {
-            query = and(query, equal("faves.status", status));
+        if (StringUtils.isNoneBlank(status)) {
+            fieldSelector = fieldSelector.andQuery(equal("faves.status", status));
         }
 
-        listOptions.setFieldSelector(FieldSelector.of(query));
+        listOptions.setFieldSelector(fieldSelector);
         return client.listAll(DoubanMovie.class, listOptions, defaultSort())
             .flatMap(this::getDoubanMovieVo);
     }
 
     private Mono<ListResult<DoubanMovieVo>> pageDoubanMovie(FieldSelector fieldSelector, PageRequest page) {
         var listOptions = new ListOptions();
-        var query = isNotNull("faves.status");
+        FieldSelector selector = FieldSelector.of(isNull("faves.status").not());
         if (fieldSelector != null && fieldSelector.query() != null) {
-            query = and(query, fieldSelector.query());
+            selector = selector.andQuery(selector.query());
         }
-        listOptions.setFieldSelector(FieldSelector.of(query));
+        listOptions.setFieldSelector(selector);
         return client.listBy(DoubanMovie.class, listOptions, page)
             .flatMap(list -> Flux.fromStream(list.get())
                 .concatMap(this::getDoubanMovieVo)

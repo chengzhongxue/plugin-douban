@@ -1,24 +1,15 @@
 <script lang="ts" setup>
-import type { PMNode } from "@halo-dev/richtext-editor";
-import type { Editor, Node } from "@halo-dev/richtext-editor";
+import type { NodeViewProps } from '@halo-dev/richtext-editor'
 import { NodeViewWrapper } from "@halo-dev/richtext-editor";
 import { computed, onMounted, ref } from "vue";
-import {formatDatetime} from "@/utils/date";
 import { VButton,VSpace,VDropdown} from "@halo-dev/components";
 import {doubanApiClient} from "@/api";
-import type { DoubanMovie } from "@/api/generated";
+import type { DoubanMovieVo } from '@/api/generated'
+import { utils } from '@halo-dev/ui-shared'
 
-const selecteDoubanMovie = ref<DoubanMovie | undefined>();
+const selecteDoubanMovie = ref<DoubanMovieVo | undefined>();
 
-const props = defineProps<{
-  editor: Editor;
-  node: PMNode;
-  selected: boolean;
-  extension: Node<any, any>;
-  getPos: () => number;
-  updateAttributes: (attributes: Record<string, any>) => void;
-  deleteNode: () => void;
-}>();
+const props = defineProps<NodeViewProps>();
 
 const src = computed({
   get: () => {
@@ -28,10 +19,6 @@ const src = computed({
     props.updateAttributes({ src: src });
   },
 });
-
-function handleSetFocus() {
-  props.editor.commands.setNodeSelection(props.getPos());
-}
 
 const editorLinkObtain = ref();
 
@@ -109,14 +96,14 @@ const handleResetInit = () => {
           <div class="doulist-subject">
             <div class="doulist-post"><img decoding="async" referrerpolicy="no-referrer"
                                            :src="selecteDoubanMovie?.spec.poster" class="fade-before fade-after"></div>
-            <div class="db--viewTime JiEun">Marked {{formatDatetime(selecteDoubanMovie?.faves.createTime)}}</div>
+            <div class="db--viewTime JiEun">Marked {{utils.date.format(selecteDoubanMovie?.faves?.createTime)}}</div>
             <div class="doulist-content">
               <div class="doulist-title"><a :href="selecteDoubanMovie?.spec.link" class="cute" target="_blank"
                                             rel="external nofollow">{{selecteDoubanMovie?.spec.name}}</a></div>
-              <div class="rating"><span class="allstardark"><span class="allstarlight" :style="'width:'+selecteDoubanMovie?.spec.score * 10+'%'"></span></span><span
+              <div class="rating"><span class="allstardark"><span class="allstarlight" :style="'width:'+ Number(selecteDoubanMovie?.spec.score) * 10+'%'"></span></span><span
                 class="rating_nums"> {{selecteDoubanMovie?.spec.score}} </span></div>
               <div class="abstract">
-                {{selecteDoubanMovie?.faves.remark !=null && selecteDoubanMovie?.faves.remark !='' ? selecteDoubanMovie?.faves.remark : selecteDoubanMovie?.spec.cardSubtitle}}
+                {{selecteDoubanMovie?.faves?.remark !=null && selecteDoubanMovie?.faves.remark !='' ? selecteDoubanMovie?.faves.remark : selecteDoubanMovie?.spec.cardSubtitle}}
               </div>
             </div>
           </div>

@@ -5,14 +5,15 @@ import la.moony.douban.extension.DoubanMovie;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.Scheme;
 import run.halo.app.extension.SchemeManager;
-import run.halo.app.extension.index.IndexSpec;
+import run.halo.app.extension.index.IndexSpecs;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
 
+import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 
-import static run.halo.app.extension.index.IndexAttributeFactory.multiValueAttribute;
-import static run.halo.app.extension.index.IndexAttributeFactory.simpleAttribute;
+
 
 /**
  * @author moony
@@ -32,43 +33,55 @@ public class DoubanPlugin extends BasePlugin {
     @Override
     public void start() {
         schemeManager.register(DoubanMovie.class, indexSpecs -> {
-            indexSpecs.add(new IndexSpec()
-                .setName("spec.genres")
-                .setIndexFunc(multiValueAttribute(DoubanMovie.class, doubanMovie -> {
-                    var genres = doubanMovie.getSpec().getGenres();
-                    return genres == null ? Set.of() : Set.copyOf(genres);
-                }))
+            indexSpecs.add(IndexSpecs.<DoubanMovie, String>multi("spec.genres", String.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
+                        .map(DoubanMovie.DoubanMovieSpec::getGenres)
+                        .map(Set::copyOf)
+                        .orElse(Set.of())
+                )
             );
-            indexSpecs.add(new IndexSpec()
-                .setName("spec.type")
-                .setIndexFunc(
-                    simpleAttribute(DoubanMovie.class, doubanMovie -> doubanMovie.getSpec().getType())));
-            indexSpecs.add(new IndexSpec()
-                .setName("spec.dataType")
-                .setIndexFunc(
-                    simpleAttribute(DoubanMovie.class, doubanMovie -> doubanMovie.getSpec().getDataType())));
-            indexSpecs.add(new IndexSpec()
-                .setName("spec.name")
-                .setIndexFunc(
-                    simpleAttribute(DoubanMovie.class, doubanMovie -> doubanMovie.getSpec().getName())));
-            indexSpecs.add(new IndexSpec()
-                .setName("spec.id")
-                .setIndexFunc(
-                    simpleAttribute(DoubanMovie.class, doubanMovie -> doubanMovie.getSpec().getId())));
-            indexSpecs.add(new IndexSpec()
-                .setName("faves.status")
-                .setIndexFunc(simpleAttribute(DoubanMovie.class, doubanMovie -> {
-                    var status = doubanMovie.getFaves().getStatus();
-                    return status == null ? null : status.toString();
-                }))
+            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.type", String.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
+                        .map(DoubanMovie.DoubanMovieSpec::getType)
+                        .orElse(null)
+                )
             );
-
-            indexSpecs.add(new IndexSpec()
-                .setName("faves.createTime")
-                .setIndexFunc(simpleAttribute(DoubanMovie.class, moment -> {
-                    var createTime = moment.getFaves().getCreateTime();
-                    return createTime == null ? null : createTime.toString();
-                }))
+            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.dataType", String.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
+                        .map(DoubanMovie.DoubanMovieSpec::getDataType)
+                        .orElse(null)
+                )
+            );
+            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.name", String.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
+                        .map(DoubanMovie.DoubanMovieSpec::getName)
+                        .orElse(null)
+                )
+            );
+            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.id", String.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
+                        .map(DoubanMovie.DoubanMovieSpec::getId)
+                        .orElse(null)
+                )
+            );
+            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("faves.status", String.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getFaves())
+                        .map(DoubanMovie.DoubanMovieFaves::getStatus)
+                        .orElse(null)
+                )
+            );
+            indexSpecs.add(IndexSpecs.<DoubanMovie, Instant>single("faves.createTime", Instant.class)
+                .indexFunc(
+                    doubanMovie -> Optional.ofNullable(doubanMovie.getFaves())
+                        .map(DoubanMovie.DoubanMovieFaves::getCreateTime)
+                        .orElse(null)
+                )
             );
         });
         schemeManager.register(CronDouban.class);

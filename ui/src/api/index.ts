@@ -1,5 +1,9 @@
 import { axiosInstance } from "@halo-dev/api-client";
-import { ApiDoubanMoonyLaV1alpha1DoubanMovieApi, DoubanMovieV1alpha1Api, CronDoubanV1alpha1Api } from "./generated";
+import { 
+  ApiDoubanMoonyLaV1alpha1DoubanMovieApi, 
+  DoubanMovieV1alpha1Api, 
+  CronDoubanV1alpha1Api 
+} from "./generated";
 
 const doubanCoreApiClient = {
   doubanMovie: new DoubanMovieV1alpha1Api(undefined, "", axiosInstance),

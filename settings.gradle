@@ -4,4 +4,5 @@ pluginManagement {
     }
 }
 rootProject.name = 'plugin-douban'
+include 'ui'
 

@@ -1,12 +1,10 @@
 plugins {
     id 'java'
-    id "com.github.node-gradle.node" version "7.0.2"
-    id "io.freefair.lombok" version "8.0.1"
-    id "run.halo.plugin.devtools" version "0.2.0"
+    id "io.freefair.lombok" version "8.13"
+    id "run.halo.plugin.devtools" version "0.6.1"
 }
 
-group 'run.halo.starter'
-sourceCompatibility = JavaVersion.VERSION_17
+group 'la.moony.douban'
 
 repositories {
     mavenCentral()
@@ -16,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation platform('run.halo.tools.platform:plugin:2.20.0-SNAPSHOT')
+    implementation platform('run.halo.tools.platform:plugin:2.22.0-alpha.1')
     compileOnly 'run.halo.app:api'
 
     testImplementation 'run.halo.app:api'
@@ -27,32 +25,32 @@ test {
     useJUnitPlatform()
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-}
-
-node {
-    nodeProjectDir = file("${project.projectDir}/ui")
-}
-
-tasks.register('buildFrontend', PnpmTask) {
-    args = ['build']
-    dependsOn('installDepsForUI')
-}
-
-tasks.register('installDepsForUI', PnpmTask) {
-    args = ['install']
-}
-
-build {
-    // build frontend before build
-    tasks.named('compileJava').configure {
-        dependsOn('buildFrontend')
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 21
+}
+
+tasks.register('processUiResources', Copy) {
+    from project(':ui').layout.buildDirectory.dir('dist')
+    into layout.buildDirectory.dir('resources/main/console')
+    dependsOn project(':ui').tasks.named('assemble')
+    shouldRunAfter tasks.named('processResources')
+}
+
+tasks.named('classes') {
+    dependsOn tasks.named('processUiResources')
+}
+
 halo {
-    version = '2.20.0'
+    version = '2.22.0-alpha.1'
+    superAdminUsername = 'admin'
+    superAdminPassword = 'admin'
 }
 
 haloPlugin {

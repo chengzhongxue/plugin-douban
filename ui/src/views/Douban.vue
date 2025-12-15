@@ -13,17 +13,15 @@ import {
   VSpace,
   IconAddCircle,
   IconCloseCircle} from "@halo-dev/components";
-import {useQuery, useQueryClient} from "@tanstack/vue-query";
+import {useQuery} from "@tanstack/vue-query";
 import {computed, ref, watch} from "vue";
 import { axiosInstance } from "@halo-dev/api-client";
-import {formatDatetime} from "@/utils/date";
 import TablerBrandDouban from '~icons/tabler/brand-douban';
-
 import {useRouteQuery} from "@vueuse/router";
 import DoubanMovieEditingModal from "../components/DoubanMovieEditingModal.vue";
 import { doubanApiClient, doubanCoreApiClient } from "@/api";
 import type { DoubanMovie } from "@/api/generated";
-
+import { utils } from '@halo-dev/ui-shared'
 const selecteDoubanMovie = ref<DoubanMovie | undefined>();
 const selecteDoubanMovies = ref<string[]>([]);
 const checkedAll = ref(false);
@@ -79,7 +77,7 @@ const {
   queryKey: ["doubanMovies", page, size,selectedSort,selectedDataType,selectedStatus,selectedType,keyword],
   queryFn: async () => {
     
-    const { data } = await doubanApiClient.doubanMovie.listDoubanMovie(
+    const { data } = await doubanApiClient.doubanMovie.listDoubanMovie1(
       {
         page: page.value,
         size: size.value,
@@ -172,7 +170,7 @@ const synchronization = () => {
   });
 }
 
-const getStatusText = (status: String) => {
+const getStatusText = (status: string) => {
   if (status == 'done'){
     return '已看';
   }else if (status == 'mark'){
@@ -180,6 +178,7 @@ const getStatusText = (status: String) => {
   }else if (status == 'doing'){
     return '在看';
   }
+  return "未知";
 };
 
 function handleClear() {
@@ -217,8 +216,7 @@ function onEditingModalClose () {
     v-if="editingModal"
     :douban-movie="selecteDoubanMovie"
     @close="onEditingModalClose"
-  >
-  </DoubanMovieEditingModal>
+  />
   <VPageHeader title="豆瓣">
     <template #icon>
       <TablerBrandDouban />
@@ -414,7 +412,7 @@ function onEditingModalClose () {
 
       <Transition v-else appear name="fade">
         <div class=":uno: w-full relative overflow-x-auto">
-          <table class=":uno: w-full  text-sm text-left text-gray-500 widefat ">
+          <table class=":uno: w-full  text-sm text-left text-gray-500 widefat">
             <thead class=":uno: text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
               <th v-permission="['plugin:douban:manage']" 
@@ -450,14 +448,19 @@ function onEditingModalClose () {
               <td class=":uno: px-4 py-4 table-td">{{doubanMovie.spec.dataType == 'db' ? '豆瓣' : doubanMovie.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</td>
               <td class=":uno: px-4 py-4 table-td">{{doubanMovie.spec.score}}</td>
               <td class=":uno: px-4 py-4">{{doubanMovie.spec.cardSubtitle}}</td>
-              <td class=":uno: px-4 py-4 table-td">{{formatDatetime(doubanMovie.faves.createTime)}}</td>
-              <td class=":uno: px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status)}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{utils.date.format(doubanMovie.faves.createTime)}}</td>
+
+              <td class=":uno: px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status || '')}}</td>
               <td class=":uno: px-4 py-4">{{doubanMovie.faves.remark}}</td>
               <td class=":uno: px-4 py-4">{{doubanMovie.faves.score}}</td>
               <td class=":uno: px-4 py-4 table-td" v-permission="['plugin:douban:manage']">
-                <VDropdownItem  @click="handleOpenCreateModal(doubanMovie)">
+                <VButton
+                  type="secondary"
+                  size="sm"
+                  @click="handleOpenCreateModal(doubanMovie)"
+                >
                   编辑
-                </VDropdownItem>
+                </VButton>
               </td>
             </tr>
             </tbody>

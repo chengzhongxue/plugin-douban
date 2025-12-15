@@ -1,0 +1,22 @@
+<div class="layoutSingleColumn layoutSingleColumn--wide u-paddingTop50">
+    <section class="db--container">
+        <nav class="db--nav">
+            <div th:each="type : ${types}" class="db--navItem JiEun"
+                 th:classappend="${type.key == 'movie' ? 'current' : ''}" th:data-type="${type.key}"
+                 th:text="${type.key}"></div>
+        </nav>
+        <div class="db--genres"></div>
+        <div class="db--type">
+            <div class="db--typeItem" data-status="mark">想看</div>
+            <div class="db--typeItem" data-status="doing">在看</div>
+            <div class="db--typeItem is-active" data-status="done">看过</div>
+        </div>
+        <div class="db--list db--list__card" data-type="movie">
+
+        </div>
+        <div class="block-more block-more__centered">
+            <div class="lds-ripple u-hide">
+            </div>
+        </div>
+    </section>
+</div>

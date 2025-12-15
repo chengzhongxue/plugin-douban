@@ -1,4 +1,4 @@
-import { definePlugin } from "@halo-dev/console-shared";
+import { definePlugin } from "@halo-dev/ui-shared";
 import TablerBrandDouban from '~icons/tabler/brand-douban';
 import { markRaw } from "vue";
 import 'uno.css';
