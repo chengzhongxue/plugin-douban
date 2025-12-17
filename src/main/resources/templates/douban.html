@@ -16,7 +16,9 @@
     </div>
 </header>
 <main class="main">
-    <th:block th:replace="~{plugin:plugin-douban:modules/douban}"></th:block>
+    <div class="layoutSingleColumn layoutSingleColumn--wide u-paddingTop50">
+        <th:block th:replace="~{plugin:plugin-douban:modules/douban}"></th:block>
+    </div>
 </main>
 <th:block th:replace="~{plugin:plugin-douban:modules/script}"></th:block>
 </body>
