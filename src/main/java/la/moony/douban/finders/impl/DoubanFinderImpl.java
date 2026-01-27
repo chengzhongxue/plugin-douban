@@ -1,11 +1,13 @@
 package la.moony.douban.finders.impl;
 
 import jakarta.annotation.Nonnull;
+import la.moony.douban.SettingConfig;
 import la.moony.douban.extension.DoubanMovie;
 import la.moony.douban.finders.DoubanFinder;
 import la.moony.douban.vo.DoubanGenresVo;
 import la.moony.douban.vo.DoubanMovieVo;
 import la.moony.douban.vo.DoubanTypeVo;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -18,9 +20,12 @@ import run.halo.app.extension.PageRequest;
 import run.halo.app.extension.PageRequestImpl;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.extension.router.selector.FieldSelector;
+import run.halo.app.infra.utils.JsonUtils;
 import run.halo.app.theme.finders.Finder;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -28,6 +33,7 @@ import static run.halo.app.extension.ExtensionUtil.notDeleting;
 import static run.halo.app.extension.index.query.Queries.all;
 import static run.halo.app.extension.index.query.Queries.and;
 import static run.halo.app.extension.index.query.Queries.equal;
+import static run.halo.app.extension.index.query.Queries.in;
 import static run.halo.app.extension.index.query.Queries.isNull;
 
 
@@ -38,6 +44,8 @@ public class DoubanFinderImpl implements DoubanFinder {
     private final ReactiveExtensionClient client;
 
     public static final Predicate<DoubanMovie> FIXED_PREDICATE = doubanMovie -> true;
+
+    private final SettingConfig settingConfig;
 
 
     @Override
@@ -51,15 +59,19 @@ public class DoubanFinderImpl implements DoubanFinder {
         var listOptions = new ListOptions();
         var query = and(isNull("faves.status").not(),equal("spec.genres", genre));
         listOptions.setFieldSelector(FieldSelector.of(query));
-        return client.listAll(DoubanMovie.class, listOptions, defaultSort())
-            .flatMap(this::getDoubanMovieVo);
+        return settingConfig.getBaseConfig()
+            .flatMapMany(baseConfig -> {
+                return client.listAll(DoubanMovie.class, listOptions, defaultSort())
+                    .flatMap(doubanMovie -> getDoubanMovieVo(doubanMovie, baseConfig));
+            });
     }
 
     @Override
     public Mono<DoubanMovieVo> get(String doubanName) {
-        return client.get(DoubanMovie.class, doubanName)
-            .filter(FIXED_PREDICATE)
-            .flatMap(this::getDoubanMovieVo);
+        return settingConfig.getBaseConfig()
+            .flatMap(baseConfig -> client.get(DoubanMovie.class, doubanName)
+                .filter(FIXED_PREDICATE)
+                .flatMap(doubanMovie -> getDoubanMovieVo(doubanMovie, baseConfig)));
     }
 
     static Sort defaultSort() {
@@ -184,61 +196,117 @@ public class DoubanFinderImpl implements DoubanFinder {
         var listOptions = new ListOptions();
         var query = and(equal("faves.status", "done"),equal("spec.type", type));
         listOptions.setFieldSelector(FieldSelector.of(query));
-        return client.listAll(DoubanMovie.class, listOptions, defaultSort())
-            .flatMap(this::getDoubanMovieVo);
+        return settingConfig.getBaseConfig()
+            .flatMapMany(baseConfig -> {
+                return client.listAll(DoubanMovie.class, listOptions, defaultSort())
+                    .flatMap(doubanMovie -> getDoubanMovieVo(doubanMovie, baseConfig));
+            });
     }
 
     @Override
     public Flux<DoubanMovieVo> list(String type, String status) {
         var listOptions = new ListOptions();
         FieldSelector fieldSelector = FieldSelector.of(notDeleting());
-        if (StringUtils.isNoneBlank(type)) {
-            if (StringUtils.isNoneBlank(type)){
-                fieldSelector = fieldSelector.andQuery(equal("spec.type", type));
-            }else {
-                fieldSelector = fieldSelector.andQuery(equal("faves.status", "done"))
-                    .andQuery(equal("spec.type", type));
-            }
+        if (StringUtils.isNotEmpty(type)) {
+            fieldSelector = fieldSelector.andQuery(equal("spec.type", type));
         }
-        if (StringUtils.isNoneBlank(status)) {
+        if (StringUtils.isNotEmpty(status)) {
             fieldSelector = fieldSelector.andQuery(equal("faves.status", status));
         }
 
         listOptions.setFieldSelector(fieldSelector);
-        return client.listAll(DoubanMovie.class, listOptions, defaultSort())
-            .flatMap(this::getDoubanMovieVo);
+        return settingConfig.getBaseConfig()
+            .flatMapMany(baseConfig -> {
+                return client.listAll(DoubanMovie.class, listOptions, defaultSort())
+                    .flatMap(doubanMovie -> getDoubanMovieVo(doubanMovie, baseConfig));
+            });
+    }
+
+    @Override
+    public Mono<ListResult<DoubanMovieVo>> list(Map<String, Object> params) {
+        var query = Optional.ofNullable(params)
+            .map(map -> JsonUtils.mapToObject(map, DoubanMovieQuery.class))
+            .orElseGet(DoubanMovieQuery::new);
+        return pageDoubanMovie(query.toListOptions().getFieldSelector(), query.toPageRequest());
     }
 
     private Mono<ListResult<DoubanMovieVo>> pageDoubanMovie(FieldSelector fieldSelector, PageRequest page) {
         var listOptions = new ListOptions();
         FieldSelector selector = FieldSelector.of(isNull("faves.status").not());
         if (fieldSelector != null && fieldSelector.query() != null) {
-            selector = selector.andQuery(selector.query());
+            selector = selector.andQuery(fieldSelector.query());
         }
         listOptions.setFieldSelector(selector);
-        return client.listBy(DoubanMovie.class, listOptions, page)
-            .flatMap(list -> Flux.fromStream(list.get())
-                .concatMap(this::getDoubanMovieVo)
-                .collectList()
-                .map(doubanMovieVos -> new ListResult<>(list.getPage(), list.getSize(),
-                    list.getTotal(), doubanMovieVos)
-                )
-            )
-            .defaultIfEmpty(
-                new ListResult<>(page.getPageNumber(), page.getPageSize(), 0L, List.of()));
+        return settingConfig.getBaseConfig()
+            .flatMap(base -> {
+               return client.listBy(DoubanMovie.class, listOptions, page)
+                    .flatMap(list -> Flux.fromStream(list.get())
+                        .concatMap(a -> getDoubanMovieVo(a, base))
+                        .collectList()
+                        .map(doubanMovieVos -> new ListResult<>(list.getPage(), list.getSize(),
+                            list.getTotal(), doubanMovieVos)
+                        )
+                    )
+                    .defaultIfEmpty(
+                        new ListResult<>(page.getPageNumber(), page.getPageSize(), 0L, List.of()));
+            });
+
     }
 
-    private Mono<DoubanMovieVo> getDoubanMovieVo(@Nonnull DoubanMovie doubanMovie) {
+    private Mono<DoubanMovieVo> getDoubanMovieVo(@Nonnull DoubanMovie doubanMovie, SettingConfig.BaseConfig baseConfig) {
+        //替换反代图片地址
+        String poster = doubanMovie.getSpec().getPoster();
+        boolean isProxy = baseConfig.getIsProxy();
+
+        if (doubanMovie.getSpec().getDataType() != "halo" && isProxy) {
+            String proxyHost = baseConfig.getProxyHost();
+            if (StringUtils.isNotEmpty(proxyHost)) {
+                String replace = poster.replaceAll("https://img\\d+.doubanio.com", proxyHost);
+                doubanMovie.getSpec().setPoster(replace);
+            }
+        }
         DoubanMovieVo doubanMovieVo = DoubanMovieVo.from(doubanMovie);
         return Mono.just(doubanMovieVo);
     }
 
-    int pageNullSafe(Integer page) {
+    static int pageNullSafe(Integer page) {
         return ObjectUtils.defaultIfNull(page, 1);
     }
 
-    int sizeNullSafe(Integer size) {
+    static int sizeNullSafe(Integer size) {
         return ObjectUtils.defaultIfNull(size, 10);
+    }
+
+    @Data
+    public static class DoubanMovieQuery {
+        private Integer page;
+        private Integer size;
+        private String type;
+        private String dataType;
+        private String status;
+        private String genre;
+
+        public ListOptions toListOptions() {
+            var builder = ListOptions.builder();
+            if (StringUtils.isNotBlank(type)) {
+                builder.andQuery(equal("spec.type", type));
+            }
+            if (StringUtils.isNotBlank(dataType)) {
+                builder.andQuery(equal("spec.dataType", dataType));
+            }
+            if (StringUtils.isNotBlank(status)) {
+                builder.andQuery(equal("faves.status", status));
+            }
+            if (StringUtils.isNotBlank(genre)) {
+                builder.andQuery(in("spec.genres", genre));
+            }
+            return builder.build();
+        }
+
+        public PageRequest toPageRequest() {
+            return PageRequestImpl.of(pageNullSafe(getPage()),
+                sizeNullSafe(getSize()), defaultSort());
+        }
     }
 
 

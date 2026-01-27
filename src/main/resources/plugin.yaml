@@ -6,7 +6,7 @@ metadata:
     "store.halo.run/app-id": "app-srBOL"
 spec:
   enabled: true
-  requires: ">=2.22.0"
+  requires: ">=2.22.1"
   author:
     name: 困困鱼
     website: https://github.com/chengzhongxue

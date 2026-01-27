@@ -13,6 +13,11 @@ spec:
           validation: required
           value: '豆瓣记录'
         - $formkit: text
+          label: 豆瓣记录列表显示条数
+          name: pageSize
+          validation: required|Number
+          value: 20
+        - $formkit: text
           label: 豆瓣的ID
           name: doubanId
           help: 我的豆瓣 https://www.douban.com/people/xxxx  xxxx 就是你的ID
@@ -20,17 +25,12 @@ spec:
           label: TMDB API Key
           name: apiKey
           help: 设置TMDB API Key在https://www.themoviedb.org/settings/api 自行申请
-        - $formkit: radio
+        - $formkit: switch
           label: 启用图片代理
           name: isProxy
           id: isProxy
           value: false
           help: 如果用豆瓣源的图片很慢可以自己搭建给图片反代站点
-          options:
-            - value: true
-              label: 开启
-            - value: false
-              label: 关闭
         - $formkit: text
           if: "$get(isProxy).value === true"
           label: 代理地址
