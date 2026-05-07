@@ -2,9 +2,10 @@ package la.moony.douban;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import la.moony.douban.extension.DoubanMovie;
+import la.moony.douban.finders.DoubanFinder;
 import la.moony.douban.service.DoubanService;
 import la.moony.douban.vo.DoubanMovieVo;
-import org.apache.commons.lang3.StringUtils;
+import la.moony.douban.vo.DoubanTypeVo;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -25,9 +26,12 @@ public class DoubanEndpoint implements CustomEndpoint {
 
     private final DoubanService doubanService;
 
+    private final DoubanFinder doubanFinder;
 
-    public DoubanEndpoint(DoubanService doubanService) {
+
+    public DoubanEndpoint(DoubanService doubanService, DoubanFinder doubanFinder) {
         this.doubanService = doubanService;
+        this.doubanFinder = doubanFinder;
     }
 
     @Override
@@ -43,6 +47,13 @@ public class DoubanEndpoint implements CustomEndpoint {
                     );
                 DoubanMovieQuery.buildParameters(builder);
             })
+            .GET("doubanmovies/-/types", this::ListTypes,
+                builder -> builder.operationId("ListTypes")
+                    .description("List all douban types.")
+                    .tag(doubanMovieTag)
+                    .response(responseBuilder()
+                        .implementationArray(DoubanTypeVo.class)
+                    ))
             .GET("doubanmovies/-/genres", this::ListGenres,
                 builder -> builder.operationId("ListGenres")
                     .description("List all douban genres.")
@@ -78,6 +89,12 @@ public class DoubanEndpoint implements CustomEndpoint {
         DoubanMovieQuery query = new DoubanMovieQuery(request);
         return doubanService.listDoubanMovie(query)
             .flatMap(doubanMovies -> ServerResponse.ok().bodyValue(doubanMovies));
+    }
+
+    private Mono<ServerResponse> ListTypes(ServerRequest request) {
+        return doubanFinder.listAllType()
+            .collectList()
+            .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
 
     private Mono<ServerResponse> ListGenres(ServerRequest request) {

@@ -10,7 +10,7 @@ metadata:
     rbac.authorization.halo.run/display-name: "查看朋友圈提交模板"
 rules:
   - apiGroups: [ "api.douban.moony.la" ]
-    resources: [ "doubanmovies","doubanmovies/genres","doubanmovies/getDoubanDetail"]
+    resources: [ "doubanmovies","doubanmovies/types","doubanmovies/genres","doubanmovies/getDoubanDetail"]
     verbs: [ "get", "list" ]
 
 ---
