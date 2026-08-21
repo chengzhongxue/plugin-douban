@@ -17,32 +17,26 @@
 /**
  * 
  * @export
- * @interface DoubanMovieFaves
+ * @interface DoubanTypeVo
  */
-export interface DoubanMovieFaves {
+export interface DoubanTypeVo {
+    /**
+     * 
+     * @type {number}
+     * @memberof DoubanTypeVo
+     */
+    'doubanCount'?: number;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieFaves
+     * @memberof DoubanTypeVo
      */
-    'createTime'?: string;
+    'key'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieFaves
+     * @memberof DoubanTypeVo
      */
-    'remark'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DoubanMovieFaves
-     */
-    'score'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DoubanMovieFaves
-     */
-    'status'?: string;
+    'name'?: string;
 }
 

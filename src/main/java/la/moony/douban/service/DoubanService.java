@@ -1,10 +1,7 @@
 package la.moony.douban.service;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import la.moony.douban.DoubanMovieQuery;
-import la.moony.douban.DoubanRequest;
-import la.moony.douban.extension.DoubanMovie;
-import la.moony.douban.vo.DoubanMovieVo;
+import la.moony.douban.sqlite.entity.DoubanMovieData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.ListResult;
@@ -13,9 +10,9 @@ public interface DoubanService {
 
     void synchronizationDouban();
 
-    Mono<DoubanMovieVo> getDoubanDetail(String url);
+    Mono<DoubanMovieData> getDoubanDetail(String url);
 
     Flux<String> listAllGenres(String type);
 
-    Mono<ListResult<DoubanMovie>> listDoubanMovie(DoubanMovieQuery doubanMovieQuery);
+    Mono<ListResult<DoubanMovieData>> listDoubanMovie(DoubanMovieQuery doubanMovieQuery);
 }

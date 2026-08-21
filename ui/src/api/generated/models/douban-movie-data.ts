@@ -17,73 +17,109 @@
 /**
  * 
  * @export
- * @interface DoubanMovieSpec
+ * @interface DoubanMovieData
  */
-export interface DoubanMovieSpec {
+export interface DoubanMovieData {
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'cardSubtitle'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
+     */
+    'creationTimestamp'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DoubanMovieData
      */
     'dataType'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof DoubanMovieData
+     */
+    'doubanId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DoubanMovieData
+     */
+    'favesCreateTime'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DoubanMovieData
+     */
+    'favesRemark'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DoubanMovieData
+     */
+    'favesScore'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DoubanMovieData
+     */
+    'favesStatus'?: string;
+    /**
+     * 
      * @type {Array<string>}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'genres'?: Array<string>;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'id'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'link'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'name'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'poster'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'pubdate'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'score'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'type'?: string;
     /**
      * 
      * @type {string}
-     * @memberof DoubanMovieSpec
+     * @memberof DoubanMovieData
      */
     'year'?: string;
 }

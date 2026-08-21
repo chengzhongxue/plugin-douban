@@ -15,66 +15,66 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { DoubanMovie } from './douban-movie';
+import type { DoubanMovieData } from './douban-movie-data';
 
 /**
  * 
  * @export
- * @interface DoubanMovieList
+ * @interface DoubanMovieDataList
  */
-export interface DoubanMovieList {
+export interface DoubanMovieDataList {
     /**
      * Indicates whether current page is the first page.
      * @type {boolean}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'first': boolean;
     /**
      * Indicates whether current page has previous page.
      * @type {boolean}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'hasNext': boolean;
     /**
      * Indicates whether current page has previous page.
      * @type {boolean}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'hasPrevious': boolean;
     /**
      * A chunk of items.
-     * @type {Array<DoubanMovie>}
-     * @memberof DoubanMovieList
+     * @type {Array<DoubanMovieData>}
+     * @memberof DoubanMovieDataList
      */
-    'items': Array<DoubanMovie>;
+    'items': Array<DoubanMovieData>;
     /**
      * Indicates whether current page is the last page.
      * @type {boolean}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'last': boolean;
     /**
      * Page number, starts from 1. If not set or equal to 0, it means no pagination.
      * @type {number}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'page': number;
     /**
      * Size of each page. If not set or equal to 0, it means no pagination.
      * @type {number}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'size': number;
     /**
      * Total elements.
      * @type {number}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'total': number;
     /**
      * Indicates total pages.
      * @type {number}
-     * @memberof DoubanMovieList
+     * @memberof DoubanMovieDataList
      */
     'totalPages': number;
 }

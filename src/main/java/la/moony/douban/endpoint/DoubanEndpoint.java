@@ -1,10 +1,10 @@
-package la.moony.douban;
+package la.moony.douban.endpoint;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import la.moony.douban.extension.DoubanMovie;
+import la.moony.douban.DoubanMovieQuery;
 import la.moony.douban.finders.DoubanFinder;
 import la.moony.douban.service.DoubanService;
-import la.moony.douban.vo.DoubanMovieVo;
+import la.moony.douban.sqlite.entity.DoubanMovieData;
 import la.moony.douban.vo.DoubanTypeVo;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,6 @@ public class DoubanEndpoint implements CustomEndpoint {
 
     private final DoubanFinder doubanFinder;
 
-
     public DoubanEndpoint(DoubanService doubanService, DoubanFinder doubanFinder) {
         this.doubanService = doubanService;
         this.doubanFinder = doubanFinder;
@@ -38,24 +37,24 @@ public class DoubanEndpoint implements CustomEndpoint {
     public RouterFunction<ServerResponse> endpoint() {
         return SpringdocRouteBuilder.route()
             .GET("doubanmovies", this::listDoubanmovie, builder -> {
-                builder.operationId("listDoubanMovie")
+                builder.operationId("QueryDoubanMovie")
                     .description("List doubanMovie.")
                     .tag(doubanMovieTag)
                     .response(
                         responseBuilder()
-                            .implementation(ListResult.generateGenericClass(DoubanMovie.class))
+                            .implementation(ListResult.generateGenericClass(DoubanMovieData.class))
                     );
                 DoubanMovieQuery.buildParameters(builder);
             })
             .GET("doubanmovies/-/types", this::ListTypes,
-                builder -> builder.operationId("ListTypes")
+                builder -> builder.operationId("QueryTypes")
                     .description("List all douban types.")
                     .tag(doubanMovieTag)
                     .response(responseBuilder()
                         .implementationArray(DoubanTypeVo.class)
                     ))
             .GET("doubanmovies/-/genres", this::ListGenres,
-                builder -> builder.operationId("ListGenres")
+                builder -> builder.operationId("QueryGenres")
                     .description("List all douban genres.")
                     .tag(doubanMovieTag)
                     .parameter(parameterBuilder()
@@ -80,7 +79,7 @@ public class DoubanEndpoint implements CustomEndpoint {
                         .implementation(String.class)
                     )
                     .response(responseBuilder()
-                        .implementation(DoubanMovieVo.class)
+                        .implementation(DoubanMovieData.class)
                     ))
             .build();
     }
@@ -109,7 +108,6 @@ public class DoubanEndpoint implements CustomEndpoint {
         return doubanService.getDoubanDetail(url)
             .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
-
 
     @Override
     public GroupVersion groupVersion() {

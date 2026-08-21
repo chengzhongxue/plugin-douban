@@ -17,6 +17,10 @@ dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.22.0')
     compileOnly 'run.halo.app:api'
 
+    implementation('org.xerial:sqlite-jdbc:3.53.2.0') {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+
     testImplementation 'run.halo.app:api'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
@@ -65,7 +69,8 @@ haloPlugin {
                 displayName = 'Extension API for Douban'
                 // 分组的 API 规则
                 pathsToMatch = ['/apis/douban.moony.la/v1alpha1/**',
-                                '/apis/api.douban.moony.la/v1alpha1/**'
+                                '/apis/api.douban.moony.la/v1alpha1/**',
+                                '/apis/console.api.douban.moony.la/v1alpha1/**'
                 ]
             }
         }

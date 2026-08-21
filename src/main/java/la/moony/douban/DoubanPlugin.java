@@ -5,19 +5,14 @@ import la.moony.douban.extension.DoubanMovie;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.Scheme;
 import run.halo.app.extension.SchemeManager;
-import run.halo.app.extension.index.IndexSpecs;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
 
-import java.time.Instant;
-import java.util.Optional;
-import java.util.Set;
-
-
-
 /**
+ * 仍注册 Scheme，供迁移 Reconciler 扫描旧 Extension；业务数据读写 SQLite。
+ *
  * @author moony
- * @url https://moony.la
+ * @url https://kunkunyu.com
  * @date 2024/2/1
  */
 @Component
@@ -32,58 +27,8 @@ public class DoubanPlugin extends BasePlugin {
 
     @Override
     public void start() {
-        schemeManager.register(DoubanMovie.class, indexSpecs -> {
-            indexSpecs.add(IndexSpecs.<DoubanMovie, String>multi("spec.genres", String.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
-                        .map(DoubanMovie.DoubanMovieSpec::getGenres)
-                        .map(Set::copyOf)
-                        .orElse(Set.of())
-                )
-            );
-            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.type", String.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
-                        .map(DoubanMovie.DoubanMovieSpec::getType)
-                        .orElse(null)
-                )
-            );
-            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.dataType", String.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
-                        .map(DoubanMovie.DoubanMovieSpec::getDataType)
-                        .orElse(null)
-                )
-            );
-            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.name", String.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
-                        .map(DoubanMovie.DoubanMovieSpec::getName)
-                        .orElse(null)
-                )
-            );
-            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("spec.id", String.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getSpec())
-                        .map(DoubanMovie.DoubanMovieSpec::getId)
-                        .orElse(null)
-                )
-            );
-            indexSpecs.add(IndexSpecs.<DoubanMovie, String>single("faves.status", String.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getFaves())
-                        .map(DoubanMovie.DoubanMovieFaves::getStatus)
-                        .orElse(null)
-                )
-            );
-            indexSpecs.add(IndexSpecs.<DoubanMovie, Instant>single("faves.createTime", Instant.class)
-                .indexFunc(
-                    doubanMovie -> Optional.ofNullable(doubanMovie.getFaves())
-                        .map(DoubanMovie.DoubanMovieFaves::getCreateTime)
-                        .orElse(null)
-                )
-            );
-        });
+        // 仅用于迁移旧 Extension，新数据走 SQLite
+        schemeManager.register(DoubanMovie.class);
         schemeManager.register(CronDouban.class);
     }
 

@@ -1,18 +1,21 @@
 import { axiosInstance } from "@halo-dev/api-client";
-import { 
-  ApiDoubanMoonyLaV1alpha1DoubanMovieApi, 
-  DoubanMovieV1alpha1Api, 
-  CronDoubanV1alpha1Api 
-} from "./generated";
+import {
+  ApiDoubanMoonyLaV1alpha1DoubanMovieApi,
+  CronDoubanV1alpha1Api, 
+  ConsoleApiDoubanMoonyLaV1alpha1DoubanMovieApi
+} from './generated'
 
 const doubanCoreApiClient = {
-  doubanMovie: new DoubanMovieV1alpha1Api(undefined, "", axiosInstance),
   cronDouban: new CronDoubanV1alpha1Api(undefined, "", axiosInstance),
 };
 
 const doubanApiClient = {
-  doubanMovie: new ApiDoubanMoonyLaV1alpha1DoubanMovieApi(undefined, "", axiosInstance),
+  doubanMovie: new ConsoleApiDoubanMoonyLaV1alpha1DoubanMovieApi(undefined, "", axiosInstance),
 };
 
+const doubanQueryApiClient = {
+  doubanMovie: new ApiDoubanMoonyLaV1alpha1DoubanMovieApi(undefined, "", axiosInstance),
+}
 
-export { doubanCoreApiClient, doubanApiClient };
+
+export { doubanCoreApiClient, doubanApiClient, doubanQueryApiClient };

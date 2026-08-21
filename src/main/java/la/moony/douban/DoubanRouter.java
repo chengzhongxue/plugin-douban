@@ -1,7 +1,7 @@
 package la.moony.douban;
 
 import la.moony.douban.finders.DoubanFinder;
-import la.moony.douban.vo.DoubanMovieVo;
+import la.moony.douban.sqlite.entity.DoubanMovieData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -54,9 +54,9 @@ public class DoubanRouter {
             String type = request.queryParam("type")
                 .filter(StringUtils::isNotBlank)
                 .orElse(null);
-            var doubanMovies = new LazyContextVariable<UrlContextListResult<DoubanMovieVo>>() {
+            var doubanMovies = new LazyContextVariable<UrlContextListResult<DoubanMovieData>>() {
                 @Override
-                protected UrlContextListResult<DoubanMovieVo> loadValue() {
+                protected UrlContextListResult<DoubanMovieData> loadValue() {
                     return doubanMovieList(request).block(BLOCKING_TIMEOUT);
                 }
             };
@@ -71,7 +71,7 @@ public class DoubanRouter {
     }
 
 
-    private Mono<UrlContextListResult<DoubanMovieVo>> doubanMovieList(ServerRequest request) {
+    private Mono<UrlContextListResult<DoubanMovieData>> doubanMovieList(ServerRequest request) {
         String path = request.path();
         int pageNum = pageNumInPathVariable(request);
         String type = request.queryParam("type")
@@ -92,9 +92,15 @@ public class DoubanRouter {
             .map(item -> item.get("pageSize").asInt(10))
             .defaultIfEmpty(10)
             .flatMap(pageSize -> {
-                Map<String, Object> params = Map.of("page", pageNum, "size", pageSize, "type", type, "status", status, "dataType", dataType, "genre", genre);
+                Map<String, Object> params = new java.util.HashMap<>();
+                params.put("page", pageNum);
+                params.put("size", pageSize);
+                params.put("type", type);
+                params.put("status", status);
+                params.put("dataType", dataType);
+                params.put("genre", genre);
                 return doubanFinder.list(params)
-                    .map(list -> new UrlContextListResult.Builder<DoubanMovieVo>()
+                    .map(list -> new UrlContextListResult.Builder<DoubanMovieData>()
                         .listResult(list)
                         .nextUrl(addQueryParams(
                             PageUrlUtils.nextPageUrl(path, totalPage(list)), type, status, dataType, genre)

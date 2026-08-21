@@ -10,9 +10,9 @@
     }
 
     function renderer(data, e) {
-        let img = data.spec.dataType == 'db' ? `${data.spec.poster}` : data.spec.poster
-        let date = new Date(data.faves.createTime);
-        let dateString = date.toLocaleString(); // 使用默认的日期和时间格式
+        let img = data.poster || '';
+        let date = data.favesCreateTime ? new Date(data.favesCreateTime) : null;
+        let dateString = date ? date.toLocaleString() : '';
         const r = document.createElement("div");
         r.classList.add('doulist-item')
         r.innerHTML = `<div class="doulist-subject">
@@ -21,10 +21,10 @@
             <div class="db--viewTime JiEun">Marked ${dateString}</div>
             <div class="doulist-content">
                 <div class="doulist-title"><a class="cute" target="_blank" rel="external nofollow"
-                        href="${data.spec.link}">${data.spec.name}</a></div>
-                <div class="rating"><span class="allstardark"><span class="allstarlight" style="width: ${data.spec.score * 10}%;"></span></span><span
-                        class="rating_nums">${data.spec.score}</span></div>
-                <div class="abstract">${data.faves?.remark != null && data.faves?.remark != '' ? data.faves?.remark : data.spec.cardSubtitle}</div>
+                        href="${data.link || ''}">${data.name || ''}</a></div>
+                <div class="rating"><span class="allstardark"><span class="allstarlight" style="width: ${Number(data.score || 0) * 10}%;"></span></span><span
+                        class="rating_nums">${data.score || ''}</span></div>
+                <div class="abstract">${data.favesRemark != null && data.favesRemark != '' ? data.favesRemark : (data.cardSubtitle || '')}</div>
             </div>
         </div>`
         e.appendChild(r);

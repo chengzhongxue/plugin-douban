@@ -3,6 +3,7 @@
 .openapi-generator-ignore
 api.ts
 api/api-douban-moony-la-v1alpha1-douban-movie-api.ts
+api/console-api-douban-moony-la-v1alpha1-douban-movie-api.ts
 api/cron-douban-v1alpha1-api.ts
 api/douban-movie-v1alpha1-api.ts
 base.ts
@@ -14,11 +15,14 @@ models/add-operation.ts
 models/copy-operation.ts
 models/cron-douban-list.ts
 models/cron-douban.ts
+models/douban-movie-data-list.ts
+models/douban-movie-data.ts
 models/douban-movie-faves.ts
+models/douban-movie-list-response.ts
 models/douban-movie-list.ts
 models/douban-movie-spec.ts
-models/douban-movie-vo.ts
 models/douban-movie.ts
+models/douban-type-vo.ts
 models/index.ts
 models/json-patch-inner.ts
 models/metadata.ts

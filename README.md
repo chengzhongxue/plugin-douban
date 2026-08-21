@@ -18,9 +18,6 @@ https://docs.kunkunyu.com/docs/plugin-douban
 * 添加企业微信 （备注进群）
 <img width="360" src="https://api.minio.yyds.pink/kunkunyu/files/2025/02/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20250212142105-pbceif.jpg" />
 
-* QQ群
-<img width="360" src="https://api.minio.yyds.pink/kunkunyu/files/2025/05/qq-708998089-iqowsh.webp" />
-
 ## 开发环境
 
 ```bash

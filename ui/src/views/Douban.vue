@@ -8,22 +8,20 @@ import {
   VLoading,
   VPagination,
   VPageHeader,
-  VDropdownItem,
   Toast,
   VSpace,
   IconAddCircle,
   IconCloseCircle} from "@halo-dev/components";
 import {useQuery} from "@tanstack/vue-query";
 import {computed, ref, watch} from "vue";
-import { axiosInstance } from "@halo-dev/api-client";
 import TablerBrandDouban from '~icons/tabler/brand-douban';
 import {useRouteQuery} from "@vueuse/router";
 import DoubanMovieEditingModal from "../components/DoubanMovieEditingModal.vue";
-import { doubanApiClient, doubanCoreApiClient } from "@/api";
-import type { DoubanMovie } from "@/api/generated";
+import { doubanApiClient } from "@/api";
+import type { DoubanMovieData } from '@/api/generated'
 import { utils } from '@halo-dev/ui-shared'
-const selecteDoubanMovie = ref<DoubanMovie | undefined>();
-const selecteDoubanMovies = ref<string[]>([]);
+const selecteDoubanMovie = ref<DoubanMovieData | undefined>();
+const selecteDoubanMovieIds = ref<string[]>([]);
 const checkedAll = ref(false);
 const selectedSort = useRouteQuery<string | undefined>("sort");
 const selectedStatus = useRouteQuery<string | undefined>("status");
@@ -77,7 +75,7 @@ const {
   queryKey: ["doubanMovies", page, size,selectedSort,selectedDataType,selectedStatus,selectedType,keyword],
   queryFn: async () => {
     
-    const { data } = await doubanApiClient.doubanMovie.listDoubanMovie1(
+    const { data } = await doubanApiClient.doubanMovie.listDoubanMovies(
       {
         page: page.value,
         size: size.value,
@@ -88,14 +86,8 @@ const {
         keyword: keyword?.value
       }
     );
-    total.value = data.total;
+    total.value = data.total || 0;
     return data.items;
-  },
-  refetchInterval: (data) =>  {
-    const deletingFriend = data?.filter( (douban) => {
-       return douban.metadata.deletionTimestamp;
-    });
-    return deletingFriend?.length ? 500 : false;
   },
 });
 
@@ -104,12 +96,12 @@ const handleCheckAllChange = (e: Event) => {
   const { checked } = e.target as HTMLInputElement;
   checkedAll.value = checked;
   if (checkedAll.value) {
-    selecteDoubanMovies.value =
-      doubanMovies.value?.map((doubanMovie) => {
-        return doubanMovie.metadata.name;
-      }) || [];
+    selecteDoubanMovieIds.value =
+      doubanMovies.value
+        ?.map((doubanMovie) => doubanMovie.id)
+        .filter((id): id is string => !!id) || [];
   } else {
-    selecteDoubanMovies.value.length = 0;
+    selecteDoubanMovieIds.value.length = 0;
   }
 };
 
@@ -120,17 +112,17 @@ const handleDeleteInBatch = () => {
     confirmType: "danger",
     onConfirm: async () => {
       try {
-        const promises = selecteDoubanMovies.value.map((doubanMovie) => {
-          return doubanCoreApiClient.doubanMovie.deleteDoubanMovie(
+        const promises = selecteDoubanMovieIds.value.map((id) => {
+          return doubanApiClient.doubanMovie.deleteDoubanMovie(
             {
-              name: doubanMovie
+              id: id
             }
           );
         });
         if (promises) {
           await Promise.all(promises);
         }
-        selecteDoubanMovies.value.length = 0;
+        selecteDoubanMovieIds.value.length = 0;
         checkedAll.value = false;
 
         Toast.success("删除成功");
@@ -159,10 +151,8 @@ const synchronization = () => {
     cancelText: "取消",
     onConfirm: async () => {
       try {
-        await axiosInstance.post("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/synchronizationDouban")
-          .then((res: any) => {
-            Toast.success("已请求同步豆瓣数据");
-          });
+        await doubanApiClient.doubanMovie.synchronizationDouban();
+        Toast.success("已请求同步豆瓣数据");
       } catch (e) {
         console.error("", e);
       }
@@ -187,10 +177,8 @@ function handleClear() {
     description: "确定要清空所有推送记录吗？此操作不可恢复。",
     async onConfirm() {
       try {
-        await axiosInstance.delete("/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/clear")
-          .then((res: any) => {
-            Toast.success("清空成功");
-          });
+        await doubanApiClient.doubanMovie.clearDoubanMovies();
+        Toast.success("清空成功");
       } catch (e) {
         console.error("", e);
       }
@@ -199,7 +187,7 @@ function handleClear() {
   });
 }
 
-const handleOpenCreateModal = (doubanMovie: DoubanMovie) => {
+const handleOpenCreateModal = (doubanMovie: DoubanMovieData) => {
   selecteDoubanMovie.value = doubanMovie;
   editingModal.value = true;
 };
@@ -259,7 +247,7 @@ function onEditingModalClose () {
             </div>
             <div class=":uno: flex w-full flex-1 items-center sm:w-auto" >
               <FormKit
-                v-if="!selecteDoubanMovies.length"
+                v-if="!selecteDoubanMovieIds.length"
                 v-model="searchText"
                 placeholder="输入关键词搜索"
                 type="text"
@@ -371,11 +359,11 @@ function onEditingModalClose () {
                       },
                       {
                         label: '较近创建',
-                        value: 'faves.createTime,desc',
+                        value: 'favesCreateTime,desc',
                       },
                       {
                         label: '较早创建',
-                        value: 'faves.createTime,asc',
+                        value: 'favesCreateTime,asc',
                       },
                     ]"
               />
@@ -434,25 +422,25 @@ function onEditingModalClose () {
             <tr v-for="doubanMovie in doubanMovies" class=":uno: border-b last:border-none hover:bg-gray-100">
               <td class=":uno: px-4 py-4 " v-permission="['plugin:douban:manage']">
                 <input
-                  v-model="selecteDoubanMovies"
-                  :value="doubanMovie.metadata.name"
+                  v-model="selecteDoubanMovieIds"
+                  :value="doubanMovie.id"
                   class=":uno: h-4 w-4 rounded border-gray-300 text-indigo-600"
                   name="post-checkbox"
                   type="checkbox"
                 />
               </td>
-              <td class=":uno: px-4 py-4">{{doubanMovie.spec.name}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.name}}</td>
               <td class=":uno: px-4 py-4 poster">
-                <img :src="doubanMovie.spec.poster"  referrerpolicy="no-referrer">
+                <img :src="doubanMovie.poster"  referrerpolicy="no-referrer">
               </td>
-              <td class=":uno: px-4 py-4 table-td">{{doubanMovie.spec.dataType == 'db' ? '豆瓣' : doubanMovie.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</td>
-              <td class=":uno: px-4 py-4 table-td">{{doubanMovie.spec.score}}</td>
-              <td class=":uno: px-4 py-4">{{doubanMovie.spec.cardSubtitle}}</td>
-              <td class=":uno: px-4 py-4 table-td">{{utils.date.format(doubanMovie.faves.createTime)}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{doubanMovie.dataType == 'db' ? '豆瓣' : doubanMovie.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{doubanMovie.score}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.cardSubtitle}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{utils.date.format(doubanMovie.favesCreateTime)}}</td>
 
-              <td class=":uno: px-4 py-4 table-td">{{getStatusText(doubanMovie.faves.status || '')}}</td>
-              <td class=":uno: px-4 py-4">{{doubanMovie.faves.remark}}</td>
-              <td class=":uno: px-4 py-4">{{doubanMovie.faves.score}}</td>
+              <td class=":uno: px-4 py-4 table-td">{{getStatusText(doubanMovie.favesStatus || '')}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.favesRemark}}</td>
+              <td class=":uno: px-4 py-4">{{doubanMovie.favesScore}}</td>
               <td class=":uno: px-4 py-4 table-td" v-permission="['plugin:douban:manage']">
                 <VButton
                   type="secondary"

@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
-import { ref, computed, nextTick, watch, useTemplateRef} from "vue";
+import { ref, computed, watch, useTemplateRef } from "vue";
 import cloneDeep from "lodash.clonedeep";
-import {doubanCoreApiClient} from "@/api";
-import type { DoubanMovie } from "@/api/generated";
-import { utils } from '@halo-dev/ui-shared'
+import { doubanApiClient } from "@/api";
+import type { DoubanMovieData } from "@/api/generated";
+import { utils } from "@halo-dev/ui-shared";
 
 const props = withDefaults(
   defineProps<{
-    doubanMovie?: DoubanMovie;
+    doubanMovie?: DoubanMovieData;
   }>(),
   {
     doubanMovie: undefined,
@@ -19,102 +19,76 @@ const emit = defineEmits<{
   (event: "close"): void;
 }>();
 
-const initialFormState: DoubanMovie = {
-  metadata: {
-    name: "",
-    generateName: "douban-movie-",
-  },
-  faves:{
-    remark :"",
-    createTime: undefined,
-    score: "",
-    status: "done"
-  },
-  spec: {
-    name: "",
-    poster: "",
-    link: "",
-    id: "",
-    score: "",
-    year: "",
-    type: "",
-    pubdate: "",
-    cardSubtitle: "",
-    dataType: "halo",
-    genres: []
-  },
-  kind: "DoubanMovie",
-  apiVersion: "douban.moony.la/v1alpha1",
+const initialFormState: DoubanMovieData = {
+  id: undefined,
+  creationTimestamp: undefined,
+  name: "",
+  poster: "",
+  link: "",
+  doubanId: "",
+  score: "",
+  year: "",
+  type: "",
+  pubdate: "",
+  cardSubtitle: "",
+  dataType: "halo",
+  genres: [],
+  favesRemark: "",
+  favesCreateTime: undefined,
+  favesScore: "",
+  favesStatus: "done",
 };
 
-const formState = ref<DoubanMovie>(cloneDeep(initialFormState));
-const saving = ref<boolean>(false);
+const formState = ref<DoubanMovieData>(cloneDeep(initialFormState));
+const saving = ref(false);
 const createTime = ref<string | undefined>(undefined);
 const modal = useTemplateRef<InstanceType<typeof VModal> | null>("modal");
 
-const isUpdateMode = computed(() => {
-  return !!formState.value.metadata.creationTimestamp;
-});
+const isUpdateMode = computed(() => !!formState.value.creationTimestamp);
 
-const modalTitle = computed(() => {
-  return isUpdateMode.value ? "编辑条目" : "新建条目";
-});
-
+const modalTitle = computed(() =>
+  isUpdateMode.value ? "编辑条目" : "新建条目"
+);
 
 watch(
   () => props.doubanMovie,
   (doubanMovie) => {
     if (doubanMovie) {
       formState.value = cloneDeep(doubanMovie);
-      createTime.value = utils.date.toDatetimeLocal(formState.value.faves.createTime);
-    }else {
+      createTime.value = utils.date.toDatetimeLocal(
+        formState.value.favesCreateTime
+      );
+    } else {
+      formState.value = cloneDeep(initialFormState);
       createTime.value = undefined;
     }
   },
-  {
-    immediate: true,
-  }
+  { immediate: true }
 );
 
 watch(
   () => createTime.value,
   (value) => {
-    formState.value.faves.createTime = value ? utils.date.toISOString(value) : undefined;
+    formState.value.favesCreateTime = value
+      ? utils.date.toISOString(value)
+      : undefined;
   }
 );
-const annotationsFormRef = ref();
 
-const handleSaveFriend = async () => {
-  annotationsFormRef.value?.handleSubmit();
-  await nextTick();
-
-  const { customAnnotations, annotations, customFormInvalid, specFormInvalid } =
-  annotationsFormRef.value || {};
-  if (customFormInvalid || specFormInvalid) {
-    return;
-  }
-
-  formState.value.metadata.annotations = {
-    ...annotations,
-    ...customAnnotations,
-  };
-  
+const handleSave = async () => {
   try {
     saving.value = true;
     if (isUpdateMode.value) {
-      await doubanCoreApiClient.doubanMovie.updateDoubanMovie({
-          name: formState.value.metadata.name,
-          doubanMovie: formState.value
+      await doubanApiClient.doubanMovie.updateDoubanMovie({
+        id: formState.value.id!,
+        doubanMovieData: formState.value,
       });
     } else {
-      await doubanCoreApiClient.doubanMovie.createDoubanMovie(
-        {
-          doubanMovie: formState.value
-        });
+      await doubanApiClient.doubanMovie.createDoubanMovie({
+        doubanMovieData: formState.value,
+      });
     }
-
     Toast.success("保存成功");
-
     modal.value?.close();
   } catch (e) {
     console.error(e);
@@ -123,6 +97,7 @@ const handleSaveFriend = async () => {
   }
 };
 </script>
+
 <template>
   <VModal
     ref="modal"
@@ -135,86 +110,79 @@ const handleSaveFriend = async () => {
       name="douban-movie-form"
       type="form"
       :config="{ validationVisibility: 'submit' }"
-      @submit="handleSaveFriend"
+      @submit="handleSave"
     >
       <div class=":uno: mt-5 divide-y divide-gray-100 md:col-span-3 md:mt-0">
         <td v-if="isUpdateMode">
-          <p><img :src="formState.spec.poster" width="100"></p>
-          <p>{{formState.spec.name}} <span class=":uno: db--titletag">{{formState.spec.dataType == 'db' ? '豆瓣' : formState.spec.dataType == 'tmdb'  ? 'TMDB' : '手动添加'}}</span>
+          <p><img :src="formState.poster" width="100" /></p>
+          <p>
+            {{ formState.name }}
+            <span class=":uno: db--titletag">{{
+              formState.dataType == "db"
+                ? "豆瓣"
+                : formState.dataType == "tmdb"
+                  ? "TMDB"
+                  : "手动添加"
+            }}</span>
           </p>
-          <p>{{formState.spec.cardSubtitle}}</p>
+          <p>{{ formState.cardSubtitle }}</p>
         </td>
         <FormKit
-          v-if="formState.spec.dataType=='halo'"
+          v-if="formState.dataType == 'halo'"
           type="attachment"
-          v-model="formState.spec.poster"
+          v-model="formState.poster"
           name="poster"
           validation="required"
           label="封面"
-        ></FormKit>
+        />
         <FormKit
-          v-if="formState.spec.dataType=='halo'"
+          v-if="formState.dataType == 'halo'"
           type="text"
-          v-model="formState.spec.name"
+          v-model="formState.name"
           name="name"
           validation="required"
           label="标题"
-        ></FormKit>
+        />
         <FormKit
           type="text"
-          v-model="formState.spec.link"
+          v-model="formState.link"
           name="link"
           validation="required"
           label="链接"
-        ></FormKit>
+        />
         <FormKit
-          v-if="formState.spec.dataType=='halo'"
+          v-if="formState.dataType == 'halo'"
           type="number"
-          v-model="formState.spec.score"
+          v-model="formState.score"
           name="score"
           validation="required"
           label="评分"
           max="10"
           min="0"
-        ></FormKit>
+        />
         <FormKit
-          v-if="formState.spec.dataType=='halo'"
+          v-if="formState.dataType == 'halo'"
           :options="[
-                    {
-                      label: '电影',
-                      value: 'movie',
-                    },
-                    {
-                      label: '图书',
-                      value: 'book',
-                    },
-                    {
-                      label: '音乐',
-                      value: 'music',
-                    },
-                    {
-                      label: '游戏',
-                      value: 'game',
-                    },
-                    {
-                      label: '舞台剧',
-                      value: 'drama',
-                    },
-                  ]"
+            { label: '电影', value: 'movie' },
+            { label: '图书', value: 'book' },
+            { label: '音乐', value: 'music' },
+            { label: '游戏', value: 'game' },
+            { label: '舞台剧', value: 'drama' },
+          ]"
           label="类型"
-          v-model="formState.spec.type"
+          v-model="formState.type"
           name="type"
           type="select"
-        ></FormKit>
+        />
         <FormKit
-          v-if="formState.spec.dataType=='halo'"
+          v-if="formState.dataType == 'halo'"
           type="textarea"
-          v-model="formState.spec.cardSubtitle"
+          v-model="formState.cardSubtitle"
           name="cardSubtitle"
           label="描述"
           :rows="4"
           validation="required|length:0,300"
-        ></FormKit>
+        />
         <FormKit
           type="datetime-local"
           min="0000-01-01T00:00"
@@ -223,34 +191,34 @@ const handleSaveFriend = async () => {
           name="createTime"
           validation="required"
           label="观看时间"
-        ></FormKit>
+        />
         <FormKit
           :options="[
-              { label: '已看', value: 'done' },
-              { label: '想看', value: 'mark' },
-              { label: '在看', value: 'doing' },
-            ]"
+            { label: '已看', value: 'done' },
+            { label: '想看', value: 'mark' },
+            { label: '在看', value: 'doing' },
+          ]"
           label="状态"
-          v-model="formState.faves.status"
-          name="status"
+          v-model="formState.favesStatus"
+          name="favesStatus"
           type="select"
-        ></FormKit>
+        />
         <FormKit
           type="textarea"
-          v-model="formState.faves.remark"
-          name="remark"
+          v-model="formState.favesRemark"
+          name="favesRemark"
           label="我的短评"
           :rows="4"
           validation="length:0,300"
-        ></FormKit>
+        />
         <FormKit
           type="number"
-          v-model="formState.faves.score"
-          name="score"
+          v-model="formState.favesScore"
+          name="favesScore"
           label="我的评分"
           max="5"
           min="0"
-        ></FormKit>
+        />
       </div>
     </FormKit>
 
@@ -270,7 +238,6 @@ const handleSaveFriend = async () => {
 </template>
 
 <style lang="scss">
-
 .db--titletag {
   font-size: 13px;
   display: inline-block;
@@ -291,5 +258,4 @@ divide-y td {
 .divide-y td p {
   margin-bottom: 6px;
 }
-
 </style>

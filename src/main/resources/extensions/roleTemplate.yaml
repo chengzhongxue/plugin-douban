@@ -28,7 +28,13 @@ metadata:
       ["plugin:douban:view"]
 rules:
   - apiGroups: [ "douban.moony.la" ]
-    resources: [ "doubanmovies"]
+    resources: [ "crondoubans" ]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "api.douban.moony.la" ]
+    resources: [ "doubanmovies","doubanmovies/types","doubanmovies/genres","doubanmovies/getDoubanDetail"]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "console.api.douban.moony.la" ]
+    resources: [ "doubanmovies" ]
     verbs: [ "get", "list" ]
 
 ---
@@ -48,7 +54,11 @@ metadata:
       ["role-template-douban-view"]
 rules:
   - apiGroups: [ "douban.moony.la" ]
-    resources: [ "doubanmovies"]
+    resources: [ "doubanmovies", "crondoubans" ]
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
-  - nonResourceURLs: [ "/apis/api.plugin.halo.run/v1alpha1/plugins/plugin-douban/douban/*"]
-    verbs: [ "create" , "delete" ]
+  - apiGroups: [ "api.douban.moony.la" ]
+    resources: [ "doubanmovies","doubanmovies/types","doubanmovies/genres","doubanmovies/getDoubanDetail"]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "console.api.douban.moony.la" ]
+    resources: [ "doubanmovies", "doubanmovies/synchronizationDouban", "doubanmovies/clear" ]
+    verbs: [ "create", "update", "delete", "get", "list" ]

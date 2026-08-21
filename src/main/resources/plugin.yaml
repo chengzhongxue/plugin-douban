@@ -7,6 +7,7 @@ metadata:
 spec:
   enabled: true
   requires: ">=2.22.1"
+  version: "1.2.6-beta.1"
   author:
     name: 困困鱼
     website: https://github.com/chengzhongxue
