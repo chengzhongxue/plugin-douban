@@ -2,6 +2,7 @@ package la.moony.douban;
 
 import la.moony.douban.extension.CronDouban;
 import la.moony.douban.extension.DoubanMovie;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.Scheme;
 import run.halo.app.extension.SchemeManager;
@@ -16,6 +17,7 @@ import run.halo.app.plugin.PluginContext;
  * @date 2024/2/1
  */
 @Component
+@EnableScheduling
 public class DoubanPlugin extends BasePlugin {
 
     private final SchemeManager schemeManager;

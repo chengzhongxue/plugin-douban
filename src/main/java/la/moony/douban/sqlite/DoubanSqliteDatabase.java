@@ -173,6 +173,7 @@ public class DoubanSqliteDatabase implements DisposableBean, StorageMaintenance 
 
     @Scheduled(fixedDelay = 60 * 60 * 1000L, initialDelay = 60 * 60 * 1000L)
     public synchronized void backupIfDue() {
+        log.info("available {}, backupIsDue {}", !available, !backupIsDue());
         if (!available || !backupIsDue()) {
             return;
         }
@@ -180,6 +181,7 @@ public class DoubanSqliteDatabase implements DisposableBean, StorageMaintenance 
     }
 
     synchronized void createBackup() {
+        log.info("available {}, isClosed {}, dbPath", !available, isClosed(), !Files.exists(dbPath));
         if (!available || isClosed() || !Files.exists(dbPath)) {
             return;
         }
@@ -479,7 +481,7 @@ public class DoubanSqliteDatabase implements DisposableBean, StorageMaintenance 
             || sqliteError.getResultCode() == SQLiteErrorCode.SQLITE_BUSY_SNAPSHOT);
     }
 
-    private static boolean isStorageFailure(SQLException error) {
+        private static boolean isStorageFailure(SQLException error) {
         if (!(error instanceof SQLiteException sqliteError)) {
             return false;
         }
