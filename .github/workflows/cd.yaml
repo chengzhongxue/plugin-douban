@@ -7,14 +7,15 @@ on:
 
 jobs:
   cd:
-    uses: halo-sigs/reusable-workflows/.github/workflows/plugin-cd.yaml@v3
+    uses: halo-sigs/reusable-workflows/.github/workflows/plugin-cd.yaml@v5
     permissions:
       contents: write
     secrets:
       halo-pat: ${{ secrets.HALO_PAT }}
     with:
       ui-path: "ui"
-      pnpm-version: 10
-      node-version: 22
+      pnpm-version: 12
+      node-version: 24
       java-version: 21
       app-id: app-srBOL
+      sync-github-readme: true
