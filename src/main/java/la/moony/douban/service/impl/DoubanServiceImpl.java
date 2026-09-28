@@ -411,16 +411,28 @@ public class DoubanServiceImpl implements DoubanService {
     }
 
     public Mono<JsonNode> doubanDetailRequest(String type, String id) {
+        // Halo 2.26 / Spring Web 7 uses Jackson 3 codecs; bodyToMono(JsonNode.class)
+        // with com.fasterxml.jackson.databind.JsonNode fails. Decode as String first.
         return WebClient.create().get()
             .uri(DB_API_DETAIL_URL, type, id)
             .retrieve()
-            .bodyToMono(JsonNode.class);
+            .bodyToMono(String.class)
+            .map(this::readTree);
     }
 
     public Mono<JsonNode> tmdbDetailRequest(String type, String tmdbId, String apiKey) {
         return WebClient.create().get()
             .uri(TMDB_API_URL, type, tmdbId, apiKey)
             .retrieve()
-            .bodyToMono(JsonNode.class);
+            .bodyToMono(String.class)
+            .map(this::readTree);
+    }
+
+    private JsonNode readTree(String body) {
+        try {
+            return new ObjectMapper().readTree(body);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to parse JSON response", e);
+        }
     }
 }

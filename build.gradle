@@ -52,7 +52,7 @@ tasks.named('classes') {
 }
 
 halo {
-    version = '2.22.8'
+    version = '2.26.0'
     superAdminUsername = 'admin'
     superAdminPassword = 'admin'
     debug = true
