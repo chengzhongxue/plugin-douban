@@ -7,7 +7,7 @@ metadata:
 spec:
   enabled: true
   requires: ">=2.26.0"
-  version: "1.2.6"
+  version: "1.2.7"
   author:
     name: 困困鱼
     website: https://github.com/chengzhongxue
