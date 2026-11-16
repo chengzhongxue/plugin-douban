@@ -25,6 +25,26 @@ spec:
           label: TMDB API Key
           name: apiKey
           help: 设置TMDB API Key在https://www.themoviedb.org/settings/api 自行申请
+        - $formkit: text
+          label: TMDB API 地址
+          name: tmdbApiAddress
+          value: 'https://api.themoviedb.org/3'
+          help: 'TMDB数据源基址。插件会在此地址后拼 /{type}/{id}?api_key=... 。官方填 https://api.themoviedb.org/3 ；如用中转站则填其中转基址且不要加 /3,例如 https://hk.fatesinger.com/api 。'
+        - $formkit: text
+          label: TMDB 代理地址(含端口)
+          name: tmdbProxyAddress
+          value: ''
+          help: 填代理服务器地址和端口,格式为 地址:端口,地址与端口必须同时填写,例如 192.168.1.100:10808。留空表示不走代理、直连。
+        - $formkit: text
+          label: TMDB 代理账号(可选)
+          name: tmdbProxyUsername
+          value: ''
+          help: 若代理需要账号密码认证才填写,否则留空。
+        - $formkit: text
+          label: TMDB 代理密码(可选)
+          name: tmdbProxyPassword
+          value: ''
+          help: 若代理需要账号密码认证才填写,否则留空。
         - $formkit: switch
           label: 启用图片代理
           name: isProxy
