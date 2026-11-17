@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,12 +33,15 @@ import la.moony.douban.sqlite.entity.DoubanMovieData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
 import run.halo.app.extension.ListResult;
 
 @Component
@@ -48,8 +52,7 @@ public class DoubanServiceImpl implements DoubanService {
         "https://fatesinger.com/dbapi/user/%s/interests?count=%s&start=%s&type=%s&status=%s";
     private static final String DB_API_DETAIL_URL =
         "https://fatesinger.com/dbapi/{type}/{id}?ck=xgtY&for_mobile=1";
-    private static final String TMDB_API_URL =
-        "https://hk.fatesinger.com/api/{type}/{tmdbId}?api_key={apiKey}&language=zh-CN";
+    private static final String DEFAULT_TMDB_API_ADDRESS = "https://api.themoviedb.org/3";
 
     private final SqliteDoubanMovieStore movieStore;
     private final SettingConfig settingConfig;
@@ -233,35 +236,52 @@ public class DoubanServiceImpl implements DoubanService {
         if (StringUtils.contains("tv,movie", type)) {
             return settingConfig.getBaseConfig().flatMap(baseConfig -> {
                 if (StringUtils.isNotEmpty(baseConfig.getApiKey())) {
-                    return tmdbDetail(type, id, baseConfig.getApiKey());
+                    return tmdbDetail(type, id, baseConfig.getApiKey(), baseConfig.getTmdbApiAddress(),
+                        baseConfig.getTmdbProxyAddress(),
+                        baseConfig.getTmdbProxyUsername(), baseConfig.getTmdbProxyPassword());
                 }
+                log.warn("TMDB API key is not configured, skip type={}, id={}", type, id);
                 return Mono.just(new DoubanMovieData());
             });
         }
         return Mono.just(new DoubanMovieData());
     }
 
-    public Mono<DoubanMovieData> tmdbDetail(String type, String id, String apiKey) {
+    public Mono<DoubanMovieData> tmdbDetail(String type, String id, String apiKey,
+        String apiAddress, String proxyAddress,
+        String proxyUsername, String proxyPassword) {
         return Mono.fromCallable(() -> movieStore.findByTypeAndDoubanId(type, id, "tmdb"))
             .subscribeOn(Schedulers.boundedElastic())
             .flatMap(optional -> {
                 if (optional.isPresent()) {
                     return Mono.just(optional.get());
                 }
-                return tmdbDetailRequest(type, id, apiKey).flatMap(jsonNode -> {
-                    String name = jsonNode.get("title") != null
-                        ? jsonNode.get("title").asText()
-                        : jsonNode.get("name").asText();
-                    String poster =
-                        "https://image.tmdb.org/t/p/original" + jsonNode.get("poster_path").asText();
-                    String tmdbId = jsonNode.get("id").asText();
-                    String doubanScore = jsonNode.get("vote_average").asText();
-                    String link = jsonNode.get("homepage").asText();
+                return tmdbDetailRequest(type, id, apiKey, apiAddress,
+                    proxyAddress, proxyUsername, proxyPassword).flatMap(jsonNode -> {
+                    JsonNode titleNode = jsonNode.get("title");
+                    JsonNode nameNode = jsonNode.get("name");
+                    String name = titleNode != null ? titleNode.asText()
+                        : (nameNode != null ? nameNode.asText() : "");
+                    String poster = jsonNode.get("poster_path") != null
+                        ? "https://image.tmdb.org/t/p/original" + jsonNode.get("poster_path").asText()
+                        : "";
+                    JsonNode idNode = jsonNode.get("id");
+                    JsonNode scoreNode = jsonNode.get("vote_average");
+                    JsonNode homepageNode = jsonNode.get("homepage");
+                    JsonNode releaseNode = jsonNode.get("release_date");
+                    JsonNode firstAirNode = jsonNode.get("first_air_date");
+                    JsonNode overviewNode = jsonNode.get("overview");
+                    if (StringUtils.isBlank(name) || idNode == null) {
+                        log.warn("TMDB response is not a valid movie/tv detail, type={}, id={}", type, id);
+                        return Mono.just(new DoubanMovieData());
+                    }
+                    String tmdbId = idNode.asText();
+                    String doubanScore = scoreNode != null ? scoreNode.asText() : "";
+                    String link = homepageNode != null ? homepageNode.asText() : "";
                     String year = "";
-                    String pubdate = jsonNode.get("release_date") != null
-                        ? jsonNode.get("release_date").asText()
-                        : jsonNode.get("first_air_date").asText();
-                    String cardSubtitle = jsonNode.get("overview").asText();
+                    String pubdate = releaseNode != null ? releaseNode.asText()
+                        : (firstAirNode != null ? firstAirNode.asText() : "");
+                    String cardSubtitle = overviewNode != null ? overviewNode.asText() : "";
                     Set<String> genres = new HashSet<>();
                     if (jsonNode.get("genres") != null) {
                         jsonNode.get("genres")
@@ -285,7 +305,16 @@ public class DoubanServiceImpl implements DoubanService {
                     return Mono.fromCallable(() -> movieStore.create(data))
                         .subscribeOn(Schedulers.boundedElastic());
                 }).onErrorResume(WebClientResponseException.NotFound.class, error -> {
-                    log.error("Resource not found: {}", error.getMessage());
+                    log.warn("TMDB resource not found: {}", error.getMessage());
+                    return Mono.just(new DoubanMovieData());
+                }).onErrorResume(WebClientResponseException.Unauthorized.class, error -> {
+                    log.warn("TMDB API key invalid: {}", error.getMessage());
+                    return Mono.just(new DoubanMovieData());
+                }).onErrorResume(WebClientResponseException.TooManyRequests.class, error -> {
+                    log.warn("TMDB rate limited: {}", error.getMessage());
+                    return Mono.just(new DoubanMovieData());
+                }).onErrorResume(Exception.class, error -> {
+                    log.error("TMDB request failed: {}", error.getMessage(), error);
                     return Mono.just(new DoubanMovieData());
                 });
             });
@@ -420,12 +449,59 @@ public class DoubanServiceImpl implements DoubanService {
             .map(this::readTree);
     }
 
-    public Mono<JsonNode> tmdbDetailRequest(String type, String tmdbId, String apiKey) {
-        return WebClient.create().get()
-            .uri(TMDB_API_URL, type, tmdbId, apiKey)
+    public Mono<JsonNode> tmdbDetailRequest(String type, String tmdbId, String apiKey,
+        String apiAddress, String proxyAddress,
+        String proxyUsername, String proxyPassword) {
+        String apiUrl = StringUtils.defaultIfBlank(apiAddress, DEFAULT_TMDB_API_ADDRESS)
+            + "/{type}/{tmdbId}?api_key={apiKey}&language=zh-CN";
+        return buildWebClient(proxyAddress, proxyUsername, proxyPassword)
+            .get()
+            .uri(apiUrl, type, tmdbId, apiKey)
             .retrieve()
             .bodyToMono(String.class)
             .map(this::readTree);
+    }
+
+    /**
+     * 解析 地址:端口 格式的代理配置构建 WebClient;地址或端口缺失/非法时回退为直连。
+     */
+    private WebClient buildWebClient(String proxyAddress, String proxyUsername,
+        String proxyPassword) {
+        if (StringUtils.isBlank(proxyAddress)) {
+            return WebClient.create();
+        }
+        int idx = proxyAddress.lastIndexOf(':');
+        if (idx <= 0 || idx == proxyAddress.length() - 1) {
+            log.warn("TMDB 代理格式应为 地址:端口,当前为:{},将回退为直连", proxyAddress);
+            return WebClient.create();
+        }
+        String host = proxyAddress.substring(0, idx).trim();
+        int port;
+        try {
+            port = Integer.parseInt(proxyAddress.substring(idx + 1).trim());
+        } catch (NumberFormatException e) {
+            log.warn("TMDB 代理端口不是数字:{},将回退为直连", proxyAddress);
+            return WebClient.create();
+        }
+        if (host.isEmpty() || port <= 0) {
+            log.warn("TMDB 代理地址或端口非法:{},将回退为直连", proxyAddress);
+            return WebClient.create();
+        }
+        HttpClient httpClient = HttpClient.create()
+            .proxy(proxySpec -> {
+                if (StringUtils.isNotBlank(proxyUsername)) {
+                    proxySpec.type(ProxyProvider.Proxy.HTTP)
+                        .address(new InetSocketAddress(host, port))
+                        .username(proxyUsername.trim())
+                        .password(pwd -> proxyPassword);
+                } else {
+                    proxySpec.type(ProxyProvider.Proxy.HTTP)
+                        .address(new InetSocketAddress(host, port));
+                }
+            });
+        return WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .build();
     }
 
     private JsonNode readTree(String body) {

@@ -14,6 +14,10 @@ public interface SettingConfig {
         private String pageSize;
         private String doubanId;
         private String apiKey;
+        private String tmdbApiAddress;
+        private String tmdbProxyAddress;
+        private String tmdbProxyUsername;
+        private String tmdbProxyPassword;
         private Boolean isProxy;
         private String proxyHost;
     }
